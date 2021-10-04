@@ -112,20 +112,19 @@ def str2timestamp(date: str, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int =
     return ts
 
 
-def get_bool(obj) -> bool:
+def get_bool(obj: Any) -> bool:
     obj = False if obj is None else obj
     if isinstance(obj, bool) is False:
         if is_number(obj):
-            obj = True if int(obj) == 1 else False
+            obj = True if str2int(obj) == 1 else False
         elif isinstance(obj, str):
-            obj = True if obj.lower() == "y" or obj.lower() == "t" else False
+            tmp: str = str(obj).strip().lower()
+            if tmp == 'y' or tmp == 't' or tmp == 'yes' or tmp == 'true':
+                obj = True
+            else:
+                obj = False
         else:
             obj = False
-    return obj
-
-
-def get_int(obj: Any) -> int:
-    obj = 0 if is_number(obj) is False else int(obj)
     return obj
 
 
@@ -163,7 +162,7 @@ def write_txt_file(filename: str, txt: str = ' ', encoding: str = 'utf-8') -> Tu
     try:
         with open(filename, 'w', encoding=encoding) as locker:
             locker.write(txt)
-        return True, txt
+        return True, 'OK'
     except Exception as e:
         return False, str(e)
 
@@ -185,7 +184,7 @@ def write_file(filename: str, txt: Union[str, bytes] = ' ', method: str = 'w+', 
     try:
         with open(filename, method, encoding=encoding) as locker:
             locker.write(txt)
-        return True, txt
+        return True, 'OK'
     except Exception as e:
         return False, str(e)
 
@@ -206,7 +205,7 @@ def file_unlock(filename: str) -> Tuple[int, str]:
         lock = os.path.join(lock, filename)
         if os.path.isfile(lock):
             os.unlink(lock)
-        return 1, u'Locked.'
+        return 1, u'Unlocked.'
     except Exception as e:
         return -1, str(e)
 
@@ -232,9 +231,9 @@ def random_char(size: int = 6, special: bool = False) -> str:
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def get_file_list(root_path: Optional[str] = None, files: Optional[List[str]] = None, is_sub: bool = False,
+def get_file_list(root_path: str, files: Optional[List[str]] = None, is_sub: bool = False,
                   is_full_path: bool = True, include_hide_file: bool = False) -> List[str]:
-    if root_path is None or files is None or not isinstance(files, list):
+    if files is None or not isinstance(files, list):
         return files if isinstance(files, list) else []
     for lists in os.listdir(root_path):
         if lists.startswith('.') or lists.endswith('.pyc'):
@@ -252,7 +251,7 @@ def get_file_list(root_path: Optional[str] = None, files: Optional[List[str]] = 
     return files
 
 
-def check_file_in_list(file: Optional[str] = None, file_list: List[str] = None) -> bool:
+def check_file_in_list(file: str, file_list: List[str] = None) -> bool:
     if file is None or not isinstance(file, str) or \
             file_list is None or not isinstance(file_list, list):
         return False
@@ -265,9 +264,9 @@ def check_file_in_list(file: Optional[str] = None, file_list: List[str] = None) 
     return False
 
 
-def crc_file(file_name: str) -> str:
+def crc_file(filename: str) -> str:
     prev = 0
-    for eachLine in open(file_name, "rb"):
+    for eachLine in open(filename, "rb"):
         prev = zlib.crc32(eachLine, prev)
     return "%X" % (prev & 0xFFFFFFFF)
 
