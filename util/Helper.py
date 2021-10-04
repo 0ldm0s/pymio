@@ -3,12 +3,13 @@ import os
 import re
 import copy
 import math
+import time
 import zlib
 import base64
 import random
 import string
 import hashlib
-import time
+import ipaddress
 from datetime import datetime, timedelta, timezone
 from dateutil.relativedelta import relativedelta, MO, SU
 from decimal import Decimal
@@ -74,22 +75,12 @@ def get_real_ip() -> str:
     return real_ip
 
 
-def check_is_ip(ip_addr: str):
-    points: List[str] = ['', '', '', '']
-    temp = ip_addr.split('.')
-    if len(temp) < 4:
-        return ''
-    for i in range(4):
-        _text_ = str(temp[i])
-        for start in range(len(_text_)):
-            end: int = start + 1
-            _word_: str = _text_[start:end]
-            if is_number(_word_):
-                point: str = points[i]
-                point = point + '' + _word_
-                points[i] = point
-    ip_addr = '.'.join(points)
-    return ip_addr
+def check_is_ip(ip_addr: str) -> bool:
+    try:
+        ipaddress.ip_address(ip_addr)
+        return True
+    except ValueError:
+        return False
 
 
 def timestamp2str(timestamp: int, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int = 0, minutes: int = 0,
