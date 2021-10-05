@@ -1,8 +1,10 @@
 # -*- encoding: utf-8 -*-
+import os
 import click
 from flask import current_app
 from flask.cli import AppGroup
 from typing import List
+from mio.util.Helper import write_txt_file
 
 CliCommand: AppGroup = AppGroup('cli', help='Execute app in cli')
 
@@ -13,7 +15,9 @@ CliCommand: AppGroup = AppGroup('cli', help='Execute app in cli')
 @click.option('-arg', '--args', 'args', default=None,
               help=u'Arguments. using k=v. If you have multiple parameters, you need to use "||".'
                    u' like: "k1=v1||k2=v2..."')
-def exe(clazz=None, args=None):
+@click.option('-pid', '--pidfile', 'pidfile', default=None,
+              help=u'If you want to create a pid file, you can set this.')
+def exe(clazz=None, args=None, pidfile=None):
     if clazz is None:
         print(u'Execute cli function, like: shell.py cli exe -cls=cli.Hello.World.me')
         return
@@ -36,6 +40,8 @@ def exe(clazz=None, args=None):
         cls = getattr(obj, clazz)
         obj = cls()
         execute = getattr(obj, method)
+        if pidfile:
+            write_txt_file(pidfile, str(os.getpid()))
         execute(app=current_app, kwargs=kwargs)
     except Exception as e:
         print(e)

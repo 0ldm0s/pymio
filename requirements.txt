@@ -1,6 +1,7 @@
 tornado
 pyyaml
 flask
+click
 flask_bcrypt
 flask_login
 flask_babel
