@@ -349,6 +349,8 @@ def get_args_from_dict(dt: Dict, ky: str, default: Optional[Any] = '', force_str
         return word
     if isinstance(word, str):
         return str(word).strip()
+    if force_str:
+        return ''
     if word is None:
         return default
     return word
