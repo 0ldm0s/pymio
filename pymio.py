@@ -8,7 +8,6 @@ import multiprocessing
 root_path: str = os.path.abspath(os.path.dirname(__file__) + '/../')
 sys.path.append(root_path)
 from tornado.httpserver import HTTPServer
-from tornado.netutil import bind_unix_socket
 from tornado.web import Application, FallbackHandler
 from typing import Optional
 from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, get_logger_level, get_buffer_size
@@ -70,6 +69,7 @@ if __name__ == '__main__':
     try:
         server = HTTPServer(mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size)
         if domain_socket is not None:
+            from tornado.netutil import bind_unix_socket
             socket = bind_unix_socket(domain_socket, mode=0o777)
             server.add_socket(socket)
             console_log.info(f'WebServer listen in {domain_socket}')

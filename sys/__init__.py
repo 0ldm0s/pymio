@@ -14,7 +14,6 @@ from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect
 from flask_mongoengine import MongoEngine
 from flask_redis import FlaskRedis
-from flask_mail import Mail
 from flask_caching import Cache
 from tornado.ioloop import IOLoop
 from typing import Tuple, Optional, List, Union
@@ -22,7 +21,7 @@ from mio.util.Helper import in_dict, is_enable, is_number
 from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.wsgi import MIO_SYSTEM_VERSION
 
-mail: Optional[Mail] = None
+mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
 redis_db: Optional[FlaskRedis] = None
@@ -93,6 +92,7 @@ def create_app(config_name: str, root_path: Optional[str] = None, config_clz: Op
                 login_manager.login_message_category = login_manager_config['login_message_category']
             login_manager.init_app(app)
     if is_enable(app.config, 'MIO_MAIL'):
+        from flask_mail import Mail
         mail = Mail()
         mail.init_app(app)
     if is_enable(app.config, 'MONGODB_ENABLE'):
