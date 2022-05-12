@@ -62,8 +62,8 @@ def get_real_ip() -> str:
         for s in xp:
             if s.startswith('for='):
                 _, real_ip, *_ = s.split('=')
-                real_ip = check_is_ip(real_ip)
-                break
+                if check_is_ip(real_ip):
+                    break
     if len(real_ip) > 0:
         return real_ip
     if 'HTTP_X_REAL_IP' in request.environ:
@@ -83,8 +83,10 @@ def check_is_ip(ip_addr: str) -> bool:
         return False
 
 
-def timestamp2str(timestamp: int, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int = 0, minutes: int = 0,
-                  logger: Optional[KeywordArgumentAdapter] = None) -> Optional[str]:
+def timestamp2str(
+        timestamp: int, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int = 0, minutes: int = 0,
+        logger: Optional[KeywordArgumentAdapter] = None
+) -> Optional[str]:
     dt = None
     try:
         utc_time = datetime.fromtimestamp(timestamp)
@@ -96,8 +98,10 @@ def timestamp2str(timestamp: int, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: 
     return dt
 
 
-def str2timestamp(date: str, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int = 0, minutes: int = 0,
-                  logger: Optional[KeywordArgumentAdapter] = None) -> Optional[int]:
+def str2timestamp(
+        date: str, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int = 0, minutes: int = 0,
+        logger: Optional[KeywordArgumentAdapter] = None
+) -> Optional[int]:
     ts = None
     try:
         time_array = time.strptime(date, iso_format)
@@ -179,8 +183,9 @@ def read_txt_file(filename: str, encoding: str = 'utf-8') -> str:
     return txt
 
 
-def write_file(filename: str, txt: Union[str, bytes] = ' ', method: str = 'w+', encoding: str = 'utf-8') \
-        -> Tuple[bool, str]:
+def write_file(
+        filename: str, txt: Union[str, bytes] = ' ', method: str = 'w+', encoding: str = 'utf-8'
+) -> Tuple[bool, str]:
     try:
         with open(filename, method, encoding=encoding) as locker:
             locker.write(txt)
@@ -231,8 +236,10 @@ def random_char(size: int = 6, special: bool = False) -> str:
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def get_file_list(root_path: str, files: Optional[List[str]] = None, is_sub: bool = False,
-                  is_full_path: bool = True, include_hide_file: bool = False) -> List[str]:
+def get_file_list(
+        root_path: str, files: Optional[List[str]] = None, is_sub: bool = False, is_full_path: bool = True,
+        include_hide_file: bool = False
+) -> List[str]:
     if files is None or not isinstance(files, list):
         return files if isinstance(files, list) else []
     for lists in os.listdir(root_path):
@@ -356,8 +363,9 @@ def get_args_from_dict(dt: Dict, ky: str, default: Optional[Any] = '', force_str
     return word
 
 
-def get_variable_from_request(key_name: str, default: Optional[Any] = '', method: str = 'check',
-                              force_str: bool = False) -> Optional[Any]:
+def get_variable_from_request(
+        key_name: str, default: Optional[Any] = '', method: str = 'check', force_str: bool = False
+) -> Optional[Any]:
     method = 'check' if method is None or not isinstance(method, str) else str(method).strip().lower()
     if default is None and force_str:
         default = ''
@@ -542,8 +550,10 @@ def rounded(numerical: Any, decimal: int = 2) -> Decimal:
     return decimal_place
 
 
-def easy_encrypted(text: str, is_decode=True, key: Optional[str] = None, expiry: int = 0,
-                   logger: Optional[KeywordArgumentAdapter] = None) -> Optional[str]:
+def easy_encrypted(
+        text: str, is_decode=True, key: Optional[str] = None, expiry: int = 0,
+        logger: Optional[KeywordArgumentAdapter] = None
+) -> Optional[str]:
     try:
         if key is None or len(key) <= 0:
             plan_key: str = current_app.config['SECRET_KEY']

@@ -18,16 +18,12 @@ from config import MIO_HOST, MIO_PORT
 init_timezone()
 init_uvloop()
 
-index = -1
 MIO_CONFIG: str = os.environ.get('MIO_CONFIG') or 'default'
 MIO_APP_CONFIG: str = os.environ.get('MIO_APP_CONFIG') or 'config'
 MIO_LIMIT_CPU: int = get_cpu_limit()
-pid_file_path: Optional[str] = None
-domain_socket: Optional[str] = None
+pid_file_path: Optional[str] = os.environ.get('MIO_PID_FILE') or None
+domain_socket: Optional[str] = os.environ.get('MIO_DOMAIN_SOCKET') or None
 for arg in sys.argv:
-    index += 1
-    if index <= 0:
-        continue
     if not arg.startswith('--'):
         continue
     arg = arg[2:]
@@ -70,6 +66,7 @@ if __name__ == '__main__':
         server = HTTPServer(mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size)
         if domain_socket is not None:
             from tornado.netutil import bind_unix_socket
+
             socket = bind_unix_socket(domain_socket, mode=0o777)
             server.add_socket(socket)
             console_log.info(f'WebServer listen in {domain_socket}')
