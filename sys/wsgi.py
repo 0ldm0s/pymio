@@ -7,7 +7,7 @@ from tornado.wsgi import WSGIContainer
 from typing import List, Tuple, Optional, Callable, Any, Type, Dict
 from types import TracebackType
 
-MIO_SYSTEM_VERSION = '1.5.21'
+MIO_SYSTEM_VERSION = '1.5.22'
 
 
 class WSGIContainerWithThread(WSGIContainer):
@@ -34,9 +34,8 @@ class WSGIContainerWithThread(WSGIContainer):
             return response.append
 
         loop = asyncio.get_event_loop()
-        app_response = yield loop.run_in_executor(None, self.wsgi_application,
-                                                  WSGIContainer.environ(request),
-                                                  start_response)
+        app_response = yield loop.run_in_executor(
+            None, self.wsgi_application, WSGIContainer.environ(request), start_response)
         try:
             response.extend(app_response)
             body: bytes = b''.join(response)
