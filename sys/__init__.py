@@ -189,5 +189,8 @@ def get_buffer_size() -> Tuple[Optional[int], Optional[int]]:
 
 
 def get_cpu_limit() -> int:
+    if sys.platform in ('win32', 'cygwin'):
+        # for windows os, just 1. test in win11
+        return 1
     cpu_limit: int = 0 if not is_number(os.environ.get('MIO_LIMIT_CPU')) else int(os.environ.get('MIO_LIMIT_CPU'))
     return cpu_limit
