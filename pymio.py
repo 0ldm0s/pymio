@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import asyncio
 import multiprocessing
 
 root_path: str = os.path.abspath(os.path.dirname(__file__) + '/../')
@@ -9,13 +10,14 @@ sys.path.append(root_path)
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, FallbackHandler
 from typing import Optional
-from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, get_logger_level, get_buffer_size
+from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, get_logger_level, get_buffer_size, \
+    get_event_loop
 from mio.sys.wsgi import WSGIContainerWithThread
-from mio.util.Helper import write_txt_file
+from mio.util.Helper import write_txt_file, is_number, str2int
 from config import MIO_HOST, MIO_PORT
 
 init_timezone()
-asyncio_loop = init_uvloop()
+init_uvloop()
 MIO_CONFIG: str = os.environ.get('MIO_CONFIG') or 'default'
 MIO_APP_CONFIG: str = os.environ.get('MIO_APP_CONFIG') or 'config'
 MIO_LIMIT_CPU: int = get_cpu_limit()
@@ -48,6 +50,12 @@ for arg in sys.argv:
     if temp[0].lower() == 'pid':
         pid_file_path: str = temp[1]
         continue
+    if temp[0].lower() == 'cpu_limit':
+        if sys.platform in ('win32', 'cygwin'):
+            # 不可在windows下设置cpu数
+            continue
+        MIO_LIMIT_CPU = 1 if not is_number(temp[1]) else str2int(temp[1])
+        continue
     if temp[0].lower() == 'ds':
         domain_socket = temp[1]
         continue
@@ -76,7 +84,9 @@ if __name__ == '__main__':
             server.start(workers)
         else:
             server.start(MIO_LIMIT_CPU)
-        asyncio_loop.run_forever()
+        # 性能下降巨大，最好不要用单例模式
+        # 哪怕报告警也不应舍弃fork模式
+        get_event_loop().run_forever()
     except KeyboardInterrupt:
-        asyncio_loop.stop()
+        get_event_loop().stop()
         console_log.info("WebServer Closed.")

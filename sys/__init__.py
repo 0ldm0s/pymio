@@ -5,6 +5,7 @@ import yaml
 import time
 import codecs
 import logging
+import asyncio
 from celery import Celery
 from flask import Flask, blueprints
 from flask_bcrypt import Bcrypt
@@ -157,18 +158,16 @@ def init_timezone():
 
 
 def init_uvloop():
-    import asyncio
     try:
         import uvloop
-        loop = uvloop.new_event_loop()
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-        asyncio.set_event_loop(loop)
     except Exception as e:
         str(e)
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
         IOLoop.configure('tornado.platform.asyncio.AsyncIOLoop')
-    return loop
+
+
+def get_event_loop():
+    return asyncio.get_event_loop()
 
 
 def get_logger_level(config_name: str) -> Tuple[int, LoggerType, bool]:
@@ -197,5 +196,5 @@ def get_cpu_limit() -> int:
     if sys.platform in ('win32', 'cygwin'):
         # for windows os, just 1. test in win11
         return 1
-    cpu_limit: int = 0 if not is_number(os.environ.get('MIO_LIMIT_CPU')) else int(os.environ.get('MIO_LIMIT_CPU'))
+    cpu_limit: int = 1 if not is_number(os.environ.get('MIO_LIMIT_CPU')) else int(os.environ.get('MIO_LIMIT_CPU'))
     return cpu_limit
