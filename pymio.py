@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import asyncio
 import multiprocessing
 
 root_path: str = os.path.abspath(os.path.dirname(__file__) + '/../')
@@ -16,8 +15,7 @@ from mio.util.Helper import write_txt_file
 from config import MIO_HOST, MIO_PORT
 
 init_timezone()
-init_uvloop()
-
+asyncio_loop = init_uvloop()
 MIO_CONFIG: str = os.environ.get('MIO_CONFIG') or 'default'
 MIO_APP_CONFIG: str = os.environ.get('MIO_APP_CONFIG') or 'config'
 MIO_LIMIT_CPU: int = get_cpu_limit()
@@ -78,7 +76,7 @@ if __name__ == '__main__':
             server.start(workers)
         else:
             server.start(MIO_LIMIT_CPU)
-        asyncio.get_event_loop().run_forever()
+        asyncio_loop.run_forever()
     except KeyboardInterrupt:
-        asyncio.get_event_loop().stop()
+        asyncio_loop.stop()
         console_log.info("WebServer Closed.")

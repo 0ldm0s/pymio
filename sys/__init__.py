@@ -157,13 +157,18 @@ def init_timezone():
 
 
 def init_uvloop():
+    import asyncio
     try:
         import uvloop
-        import asyncio
+        loop = uvloop.new_event_loop()
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        asyncio.set_event_loop(loop)
     except Exception as e:
         str(e)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         IOLoop.configure('tornado.platform.asyncio.AsyncIOLoop')
+    return loop
 
 
 def get_logger_level(config_name: str) -> Tuple[int, LoggerType, bool]:
