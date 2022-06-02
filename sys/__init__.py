@@ -74,6 +74,7 @@ def create_app(
         sys.exit(0)
     app: Flask = Flask(__name__, static_folder=static_folder, template_folder=template_folder)
     app.config.from_object(config[config_name])
+    app.config['ENV'] = config_name
     config[config_name].init_app(app)
     babel = Babel(app)
     if in_dict(base_config, 'csrf'):

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import asyncio
 import multiprocessing
 
 root_path: str = os.path.abspath(os.path.dirname(__file__) + '/../')
