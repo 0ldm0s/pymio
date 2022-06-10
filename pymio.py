@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import multiprocessing
 
 root_path: str = os.path.abspath(os.path.dirname(__file__) + '/../')
 sys.path.append(root_path)
@@ -79,6 +78,7 @@ if __name__ == '__main__':
             server.bind(MIO_PORT, MIO_HOST)
             console_log.info("WebServer listen in {}://{}:{}".format('http', MIO_HOST, MIO_PORT))
         if MIO_LIMIT_CPU <= 0:
+            import multiprocessing
             workers = multiprocessing.cpu_count()
             server.start(workers)
         else:
