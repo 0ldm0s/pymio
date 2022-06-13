@@ -50,7 +50,7 @@ def is_enable(dic: dict, key: str) -> bool:
     return _
 
 
-def get_real_ip() -> str:
+def get_real_ip(idx: int = 0, show_all: bool = False, logger: Optional[KeywordArgumentAdapter] = None) -> str:
     real_ip: str = ''
     if 'HTTP_CF_CONNECTING_IP' in request.environ:
         real_ip = request.environ['HTTP_CF_CONNECTING_IP']
@@ -72,6 +72,14 @@ def get_real_ip() -> str:
         real_ip = request.environ['HTTP_X_FORWARDED_FOR']
     else:
         real_ip = request.environ['REMOTE_ADDR']
+    if ',' in real_ip and not show_all:
+        try:
+            _tmp_: List[str] = real_ip.split(',')
+            real_ip = _tmp_[idx].strip()
+        except Exception as e:
+            if logger:
+                logger.error(e)
+            return real_ip
     return real_ip
 
 
