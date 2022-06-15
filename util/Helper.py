@@ -585,9 +585,10 @@ def easy_encrypted(
         if is_decode:
             new_data = base64_decode(text[key_c_length:])
         else:
+            hex_text: str = bytes(text, 'utf-8').hex()
             expiry = expiry + get_utc_now() if expiry > 0 else 0
             expiry_str: str = '%010d' % expiry
-            plan_text: str = expiry_str + '' + md5(text + '' + key_b)[0:16] + '' + text
+            plan_text: str = expiry_str + '' + md5(hex_text + '' + key_b)[0:16] + '' + hex_text
             new_data = plan_text.encode('latin-1')
         string_length: int = len(new_data)
         decode_result: str = ''
@@ -624,7 +625,9 @@ def easy_encrypted(
             t2: str = decode_result[10:26]
             t3: str = md5(decode_result[26:] + key_b)[0:16]
             if (t1 == 0 or t1 - get_utc_now() > 0) and t2 == t3:
-                return decode_result[26:]
+                text = decode_result[26:]
+                hash_byte: bytes = bytearray.fromhex(text)
+                return hash_byte.decode('utf-8')
         else:
             b64code: bytes = base64_encode(encode_result)
             result: str = b64code.decode('latin-1')
