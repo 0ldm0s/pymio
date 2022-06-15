@@ -18,6 +18,7 @@ python-dateutil
 celery
 asgiref
 zstandard
-simplejson
+orjson
 markdown
 python-snappy
+cryptography

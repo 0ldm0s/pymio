@@ -9,6 +9,7 @@ flask_wtf
 flask_mongoengine
 flask_cors
 flask_redis
+flask_mail
 flask_caching
 daiquiri
 fleming
@@ -16,3 +17,7 @@ python-dateutil
 celery
 asgiref
 zstandard
+orjson
+markdown
+python-snappy
+cryptography
