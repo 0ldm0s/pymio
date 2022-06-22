@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
+import os
 import asyncio
 from tornado import escape, gen
 from tornado import httputil
 from tornado.httputil import ResponseStartLine, HTTPHeaders, HTTPServerRequest
 from tornado.wsgi import WSGIContainer
-from typing import List, Tuple, Optional, Callable, Any, Type, Dict
+from typing import List, Tuple, Optional, Callable, Any, Type, Dict, Union
 from types import TracebackType
 
-MIO_SYSTEM_VERSION = '1.5.35'
+MIO_SYSTEM_VERSION = '1.5.36'
 
 
 class WSGIContainerWithThread(WSGIContainer):
@@ -54,8 +55,10 @@ class WSGIContainerWithThread(WSGIContainer):
                 headers.append(('Content-Length', str(len(body))))
             if 'content-type' not in header_set:
                 headers.append(('Content-Type', 'text/html; charset=UTF-8'))
-        if 'server' not in header_set:
-            headers.append(('Server', 'PyMio/{}'.format(MIO_SYSTEM_VERSION)))
+        show_version: Union[str, bool] = os.environ.get("MIO_SERVER_TAG", "0")
+        show_version = True if show_version == '1' else False
+        server: str = f"PyMio/{MIO_SYSTEM_VERSION}" if show_version else "PyMio"
+        headers.append(('Server', server))
         start_line: ResponseStartLine = httputil.ResponseStartLine('HTTP/1.1', status_code, reason)
         header_obj: HTTPHeaders = httputil.HTTPHeaders()
         for key, value in headers:
