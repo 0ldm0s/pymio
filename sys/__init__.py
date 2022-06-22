@@ -9,7 +9,6 @@ import asyncio
 from celery import Celery
 from flask import Flask, blueprints
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager
 from flask_babel import Babel
 from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect
@@ -27,7 +26,6 @@ crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
 redis_db: Optional[FlaskRedis] = None
 csrf: Optional[CSRFProtect] = None
-login_manager: Optional[LoginManager] = None
 cache: Optional[Cache] = None
 babel: Optional[Babel] = None
 celery_app: Optional[Celery] = None
@@ -81,19 +79,6 @@ def create_app(
         if is_enable(base_config['csrf'], 'enable'):
             csrf = CSRFProtect()
             csrf.init_app(app)
-    if in_dict(base_config, 'login_manager'):
-        if is_enable(base_config['login_manager'], 'enable'):
-            login_manager_config: dict = base_config['login_manager']
-            login_manager = LoginManager()
-            login_manager.session_protection = 'strong' if not in_dict(login_manager_config, 'session_protection') \
-                else login_manager_config['session_protection']
-            login_manager.login_view = 'main.login' if not in_dict(login_manager_config, 'login_view') else \
-                login_manager_config['login_view']
-            if in_dict(login_manager_config, 'login_message'):
-                login_manager.login_message = login_manager_config['login_message']
-            if in_dict(login_manager_config, 'login_message_category'):
-                login_manager.login_message_category = login_manager_config['login_message_category']
-            login_manager.init_app(app)
     if is_enable(app.config, 'MIO_MAIL'):
         from flask_mail import Mail
         mail = Mail()
