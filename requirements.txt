@@ -3,7 +3,6 @@ pyyaml
 flask
 click
 flask_bcrypt
-flask_login
 flask_babel
 flask_wtf
 flask_mongoengine
