@@ -7,20 +7,23 @@ root_path: str = os.path.abspath(os.path.dirname(__file__) + '/../')
 sys.path.append(root_path)
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, FallbackHandler
-from typing import Optional
+from typing import Optional, Union
 from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, get_logger_level, get_buffer_size, \
     get_event_loop
 from mio.sys.wsgi import WSGIContainerWithThread
 from mio.util.Helper import write_txt_file, is_number, str2int
 from config import MIO_HOST, MIO_PORT
 
-init_timezone()
-init_uvloop()
 MIO_CONFIG: str = os.environ.get('MIO_CONFIG') or 'default'
 MIO_APP_CONFIG: str = os.environ.get('MIO_APP_CONFIG') or 'config'
 MIO_LIMIT_CPU: int = get_cpu_limit()
 pid_file_path: Optional[str] = os.environ.get('MIO_PID_FILE') or None
 domain_socket: Optional[str] = os.environ.get('MIO_DOMAIN_SOCKET') or None
+MIO_UVLOOP: Union[str, bool] = str(os.environ.get('MIO_UVLOOP', '1'))
+MIO_UVLOOP = True if MIO_UVLOOP == '1' else False
+init_timezone()
+if MIO_UVLOOP:
+    init_uvloop()
 for arg in sys.argv:
     if not arg.startswith('--'):
         continue
@@ -79,6 +82,7 @@ if __name__ == '__main__':
             console_log.info("WebServer listen in {}://{}:{}".format('http', MIO_HOST, MIO_PORT))
         if MIO_LIMIT_CPU <= 0:
             import multiprocessing
+
             workers = multiprocessing.cpu_count()
             server.start(workers)
         else:
