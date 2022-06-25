@@ -35,7 +35,7 @@ def create_app(
         config_name: str, root_path: Optional[str] = None, config_clz: Optional[str] = None,
         logger_type: LoggerType = LoggerType, log_level: int = logging.DEBUG
 ) -> Tuple[Flask, List[tuple], LogHandler]:
-    global cache, babel, login_manager, csrf, redis_db, db, mail, celery_app
+    global cache, babel, csrf, redis_db, db, mail, celery_app
     console = LogHandler('PyMio', logger_type=logger_type, log_level=log_level)
     console.info(u'Initializing the system......profile: {}'.format(config_name))
     config_clz: str = 'config' if not isinstance(config_clz, str) else config_clz.strip()

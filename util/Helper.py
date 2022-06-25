@@ -50,7 +50,9 @@ def is_enable(dic: dict, key: str) -> bool:
     return _
 
 
-def get_real_ip(idx: int = 0, show_all: bool = False, logger: Optional[KeywordArgumentAdapter] = None) -> str:
+def get_real_ip(
+        idx: int = 0, show_all: bool = False, ipv6only: bool = True, logger: Optional[KeywordArgumentAdapter] = None
+) -> str:
     real_ip: str = ''
     if 'HTTP_CF_CONNECTING_IP' in request.environ:
         real_ip = request.environ['HTTP_CF_CONNECTING_IP']
@@ -79,7 +81,9 @@ def get_real_ip(idx: int = 0, show_all: bool = False, logger: Optional[KeywordAr
         except Exception as e:
             if logger:
                 logger.error(e)
-            return real_ip
+    if not ipv6only:
+        # for haproxy v4v6 mode
+        real_ip = real_ip.replace("::ffff:", "") if real_ip.startswith("::ffff:") else real_ip
     return real_ip
 
 
