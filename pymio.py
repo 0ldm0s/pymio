@@ -19,7 +19,7 @@ MIO_APP_CONFIG: str = os.environ.get('MIO_APP_CONFIG') or 'config'
 MIO_LIMIT_CPU: int = get_cpu_limit()
 pid_file_path: Optional[str] = os.environ.get('MIO_PID_FILE') or None
 domain_socket: Optional[str] = os.environ.get('MIO_DOMAIN_SOCKET') or None
-MIO_UVLOOP: Union[str, bool] = str(os.environ.get('MIO_UVLOOP', '1'))
+MIO_UVLOOP: Union[str, bool] = str(os.environ.get('MIO_UVLOOP', '0'))
 MIO_UVLOOP = True if MIO_UVLOOP == '1' else False
 init_timezone()
 if MIO_UVLOOP:
