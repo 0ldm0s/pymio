@@ -35,6 +35,10 @@ def get_canonical_os_name() -> str:
         if info == "aarch64":
             return "linux_aarch64"
         return "linux"
+    if "bsd" in sys.platform:
+        if "freebsd" in sys.platform:
+            return "freebsd"
+        return "bsd"
     return "unkonw"
 
 
