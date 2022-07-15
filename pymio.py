@@ -9,7 +9,7 @@ from tornado.httpserver import HTTPServer
 from tornado.web import Application, FallbackHandler
 from typing import Optional, Union
 from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, get_logger_level, get_buffer_size, \
-    get_event_loop
+    get_event_loop, os_name
 from mio.sys.wsgi import WSGIContainerWithThread
 from mio.util.Helper import write_txt_file, is_number, str2int
 from config import MIO_HOST, MIO_PORT
@@ -52,7 +52,7 @@ for arg in sys.argv:
         pid_file_path: str = temp[1]
         continue
     if temp[0].lower() == 'cpu_limit':
-        if sys.platform in ('win32', 'cygwin'):
+        if os_name in ["windows", "unkonw"]:
             # 不可在windows下设置cpu数
             continue
         MIO_LIMIT_CPU = 1 if not is_number(temp[1]) else str2int(temp[1])

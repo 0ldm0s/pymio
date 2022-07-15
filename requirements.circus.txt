@@ -1,4 +1,1 @@
 circus
-circus-web
-chaussette
-gevent

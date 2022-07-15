@@ -17,7 +17,7 @@ from flask_redis import FlaskRedis
 from flask_caching import Cache
 from tornado.ioloop import IOLoop
 from typing import Tuple, Optional, List, Union
-from mio.util.Helper import in_dict, is_enable, is_number
+from mio.util.Helper import in_dict, is_enable, is_number, get_canonical_os_name
 from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.wsgi import MIO_SYSTEM_VERSION
 
@@ -29,6 +29,7 @@ csrf: Optional[CSRFProtect] = None
 cache: Optional[Cache] = None
 babel: Optional[Babel] = None
 celery_app: Optional[Celery] = None
+os_name: str = get_canonical_os_name()
 
 
 def create_app(
@@ -144,6 +145,9 @@ def init_timezone():
 
 
 def init_uvloop():
+    if os_name in ["windows", "unkonw"]:
+        IOLoop.configure('tornado.platform.asyncio.AsyncIOLoop')
+        return
     try:
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -179,7 +183,7 @@ def get_buffer_size() -> Tuple[Optional[int], Optional[int]]:
 
 
 def get_cpu_limit() -> int:
-    if sys.platform in ('win32', 'cygwin'):
+    if os_name in ["windows", "unkonw"]:
         # for windows os, just 1. test in win11
         return 1
     cpu_limit: int = 1 if not is_number(os.environ.get('MIO_LIMIT_CPU')) else int(os.environ.get('MIO_LIMIT_CPU'))

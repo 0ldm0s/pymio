@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import sys
 import copy
 import math
 import time
@@ -9,13 +10,32 @@ import base64
 import random
 import string
 import hashlib
+import platform
 import ipaddress
+import subprocess
 from datetime import datetime, timedelta, timezone
 from dateutil.relativedelta import relativedelta, MO, SU
 from decimal import Decimal
 from flask import request, current_app
 from daiquiri import KeywordArgumentAdapter
 from typing import Any, Tuple, Union, Optional, List, Dict
+
+
+def get_canonical_os_name() -> str:
+    if sys.platform in ("win32", "cygwin"):
+        return "windows"
+    if sys.platform == "darwin":
+        result = subprocess.run(["sysctl", "-a", "machdep.cpu.brand_string"], stdout=subprocess.PIPE)
+        brand_string: str = result.stdout.decode("utf-8").strip().lower()
+        if "apple" in brand_string:
+            return "mac_m1"
+        return "mac"
+    if sys.platform.startswith("linux"):
+        info: str = platform.processor()
+        if info == "aarch64":
+            return "linux_aarch64"
+        return "linux"
+    return "unkonw"
 
 
 def check_ua(keys: List[str]) -> bool:
