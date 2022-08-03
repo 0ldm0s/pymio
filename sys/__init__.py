@@ -19,6 +19,7 @@ from tornado.ioloop import IOLoop
 from typing import Tuple, Optional, List, Union
 from mio.util.Helper import in_dict, is_enable, is_number, get_canonical_os_name
 from mio.util.Logs import LogHandler, LoggerType, nameToLevel
+from mio.sys.json import ORJSONEncoder, ORJSONDecoder
 from mio.sys.wsgi import MIO_SYSTEM_VERSION
 
 mail = None
@@ -72,6 +73,8 @@ def create_app(
         console.error(u'Config invalid!')
         sys.exit(0)
     app: Flask = Flask(__name__, static_folder=static_folder, template_folder=template_folder)
+    app.json_encoder = ORJSONEncoder
+    app.json_decoder = ORJSONDecoder
     app.config.from_object(config[config_name])
     app.config['ENV'] = config_name
     config[config_name].init_app(app)
