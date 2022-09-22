@@ -19,7 +19,7 @@ CliCommand: AppGroup = AppGroup('cli', help='Execute app in cli')
               help=u'If you want to create a pid file, you can set this.')
 def exe(clazz=None, args=None, pidfile=None):
     if clazz is None:
-        print(u'Execute cli function, like: shell.py cli exe -cls=cli.Hello.World.me')
+        print(u'Execute cli function, like: FLASK_APP=mio.shell flask cli exe -cls=cli.Hello.World.me')
         return
     tmp: List[str] = clazz.split('.')
     file: str = '.'.join(tmp[0:-2])
