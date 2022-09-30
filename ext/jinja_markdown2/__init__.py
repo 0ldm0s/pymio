@@ -29,7 +29,7 @@ EXTENSION_CONFIG = {}
 
 
 class MarkdownExtension(Extension):
-    tags = set(['markdown'])
+    tags = {"markdown"}
 
     def __init__(self, environment):
         super(MarkdownExtension, self).__init__(environment)
@@ -40,11 +40,11 @@ class MarkdownExtension(Extension):
     def parse(self, parser):
         lineno = next(parser.stream).lineno
         body = parser.parse_statements(
-            ['name:endmarkdown'],
+            ["name:endmarkdown"],
             drop_needle=True
         )
         return CallBlock(
-            self.call_method('_render_markdown'),
+            self.call_method("_render_markdown"),
             [],
             [],
             body
@@ -55,5 +55,6 @@ class MarkdownExtension(Extension):
         text = self._dedent(text)
         return self.environment.markdowner.convert(text)
 
-    def _dedent(self, text):
+    @staticmethod
+    def _dedent(text):
         return textwrap.dedent(text.strip("\n"))

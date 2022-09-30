@@ -8,7 +8,7 @@ from tornado.wsgi import WSGIContainer
 from typing import List, Tuple, Optional, Callable, Any, Type, Dict, Union
 from types import TracebackType
 
-MIO_SYSTEM_VERSION = '1.6.3'
+MIO_SYSTEM_VERSION = "1.6.4"
 
 
 class WSGIContainerWithThread(WSGIContainer):
@@ -28,8 +28,8 @@ class WSGIContainerWithThread(WSGIContainer):
                     ]
                 ] = None,
         ) -> Callable[[bytes], Any]:
-            data['status'] = status
-            data['headers'] = http_headers
+            data["status"] = status
+            data["headers"] = http_headers
             if exec_info:
                 print(exec_info)
             return response.append
@@ -39,27 +39,27 @@ class WSGIContainerWithThread(WSGIContainer):
             None, self.wsgi_application, WSGIContainer.environ(request), start_response)
         try:
             response.extend(app_response)
-            body: bytes = b''.join(response)
+            body: bytes = b"".join(response)
         finally:
-            if hasattr(app_response, 'close'):
+            if hasattr(app_response, "close"):
                 app_response.close()
         if not data:
-            raise Exception('WSGI app did not call start_response')
-        status_code_str, reason = str(data['status']).split(' ', 1)
+            raise Exception("WSGI app did not call start_response")
+        status_code_str, reason = str(data["status"]).split(" ", 1)
         status_code: int = int(status_code_str)
-        headers: List[tuple] = data['headers']
+        headers: List[tuple] = data["headers"]
         header_set = set(k.lower() for (k, v) in headers)
         body = escape.utf8(body)
         if status_code != 304:
-            if 'content-length' not in header_set:
-                headers.append(('Content-Length', str(len(body))))
-            if 'content-type' not in header_set:
-                headers.append(('Content-Type', 'text/html; charset=UTF-8'))
+            if "content-length" not in header_set:
+                headers.append(("Content-Length", str(len(body))))
+            if "content-type" not in header_set:
+                headers.append(("Content-Type", "text/html; charset=UTF-8"))
         show_version: Union[str, bool] = os.environ.get("MIO_SERVER_TAG", "0")
-        show_version = True if show_version == '1' else False
+        show_version = True if show_version == "1" else False
         server: str = f"PyMio/{MIO_SYSTEM_VERSION}" if show_version else "PyMio"
-        headers.append(('Server', server))
-        start_line: ResponseStartLine = httputil.ResponseStartLine('HTTP/1.1', status_code, reason)
+        headers.append(("Server", server))
+        start_line: ResponseStartLine = httputil.ResponseStartLine("HTTP/1.1", status_code, reason)
         header_obj: HTTPHeaders = httputil.HTTPHeaders()
         for key, value in headers:
             header_obj.add(key, value)

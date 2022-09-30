@@ -3,7 +3,7 @@
 import os
 import sys
 
-root_path: str = os.path.abspath(os.path.dirname(__file__) + '/../')
+root_path: str = os.path.abspath(os.path.dirname(__file__) + "/../")
 sys.path.append(root_path)
 from mio.pymio import app
 

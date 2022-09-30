@@ -11,16 +11,16 @@ class I18n(object):
 
     @staticmethod
     def __get_language__() -> str:
-        language: Optional[str] = request.accept_languages.best_match(current_app.config['LANGUAGES'])
+        language: Optional[str] = request.accept_languages.best_match(current_app.config["LANGUAGES"])
         if language is None:
-            return current_app.config['DEFAULT_LANGUAGE']
+            return current_app.config["DEFAULT_LANGUAGE"]
         return language
 
-    def __init__(self, language: Optional[str] = None, domain: str = 'messages'):
+    def __init__(self, language: Optional[str] = None, domain: str = "messages"):
         if language is None or len(language) <= 0:
             language = self.__get_language__()
         try:
-            localedir: str = os.path.join(get_root_path(), 'translations')
+            localedir: str = os.path.join(get_root_path(), "translations")
             self._tran_ = gettext.translation(domain, localedir, languages=[language])
         except FileNotFoundError:
             pass

@@ -21,21 +21,21 @@ class LoggerType(Enum):
 
 
 nameToLevel = {
-    'CONSOLE': LoggerType.CONSOLE,
-    'FILE': LoggerType.FILE,
-    'DATADOG': LoggerType.DATADOG,
-    'SYSLOG': LoggerType.SYSLOG,
-    'CONSOLE_FILE': LoggerType.CONSOLE_FILE,
-    'CONSOLE_DATADOG': LoggerType.CONSOLE_DATADOG,
-    'CONSOLE_SYSLOG': LoggerType.CONSOLE_SYSLOG,
+    "CONSOLE": LoggerType.CONSOLE,
+    "FILE": LoggerType.FILE,
+    "DATADOG": LoggerType.DATADOG,
+    "SYSLOG": LoggerType.SYSLOG,
+    "CONSOLE_FILE": LoggerType.CONSOLE_FILE,
+    "CONSOLE_DATADOG": LoggerType.CONSOLE_DATADOG,
+    "CONSOLE_SYSLOG": LoggerType.CONSOLE_SYSLOG,
 }
 
 
 class LogHandler(object):
-    logger: daiquiri.KeywordArgumentAdapter
+    console_log: daiquiri.KeywordArgumentAdapter
 
     def __init__(self, logger_name: str,
-                 fmt: Optional[str] = '%(asctime)s [PID %(process)d] [%(levelname)s] %(name)s -> %(message)s',
+                 fmt: Optional[str] = "%(asctime)s [PID %(process)d] [%(levelname)s] %(name)s -> %(message)s",
                  datefmt: Optional[str] = None, logger_type: LoggerType = None, log_level: int = logging.DEBUG,
                  datadog_config: Optional[DataDog] = None, syslog_config: Optional[SysLog] = None):
         formatter: daiquiri.formatter.ColorFormatter = daiquiri.formatter.ColorFormatter(
@@ -44,9 +44,9 @@ class LogHandler(object):
         )
         console_only = False
         if logger_type == LoggerType.FILE or logger_type == LoggerType.CONSOLE_FILE:
-            logger_dir = os.path.join(get_root_path(), 'logs')
-            errors_file = os.path.join(logger_dir, 'errors.log')
-            everything_file = os.path.join(logger_dir, 'everything.log')
+            logger_dir = os.path.join(get_root_path(), "logs")
+            errors_file = os.path.join(logger_dir, "errors.log")
+            everything_file = os.path.join(logger_dir, "everything.log")
             if not os.path.isdir(logger_dir):
                 os.makedirs(logger_dir)
             if logger_type == LoggerType.CONSOLE_FILE:
@@ -102,16 +102,16 @@ class LogHandler(object):
             daiquiri.setup(level=log_level, outputs=(
                 daiquiri.output.Stream(formatter=formatter),
             ))
-        self.logger = daiquiri.getLogger(logger_name, subsystem='pymio')
+        self.console_log = daiquiri.getLogger(logger_name, subsystem="pymio")
 
     def info(self, msg):
-        self.logger.info(msg)
+        self.console_log.info(msg)
 
     def error(self, msg):
-        self.logger.error(msg)
+        self.console_log.error(msg)
 
     def debug(self, msg):
-        self.logger.debug(msg)
+        self.console_log.debug(msg)
 
     def warning(self, msg):
-        self.logger.warning(msg)
+        self.console_log.warning(msg)

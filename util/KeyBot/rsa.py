@@ -5,7 +5,7 @@ import base64
 from typing import Optional, List
 
 
-class KeyBot(object):
+class Rsa(object):
     __key_path__: str
     __pubkey__: Optional[rsa.PublicKey] = None
     __privkey__: Optional[rsa.PrivateKey] = None
@@ -17,28 +17,30 @@ class KeyBot(object):
             if not os.path.isdir(key_path):
                 os.makedirs(key_path)
 
-    def gen_new_key(self, is_save: bool = True, nbits: int = 2048, accurate: bool = True, poolsize: int = 1,
-                    exponent: int = 65537):
+    def gen_new_key(
+            self, is_save: bool = True, nbits: int = 2048, accurate: bool = True, poolsize: int = 1,
+            exponent: int = 65537
+    ):
         pubkey, privkey = rsa.newkeys(nbits, accurate, poolsize, exponent)
         self.__pubkey__ = pubkey
         self.__privkey__ = privkey
         if is_save and self.__key_path:
-            privkey_file: str = '{}/privkey.pem'.format(self.__key_path)
-            pubkey_file: str = '{}/cacert.pem'.format(self.__key_path)
+            privkey_file: str = f"{self.__key_path}/privkey.pem"
+            pubkey_file: str = f"{self.__key_path}/cacert.pem"
             priv = self.__privkey__.save_pkcs1()
-            with open(privkey_file, 'wb+') as f:
+            with open(privkey_file, "wb+") as f:
                 f.write(priv)
             pub = self.__pubkey__.save_pkcs1()
-            with open(pubkey_file, 'wb+') as f:
+            with open(pubkey_file, "wb+") as f:
                 f.write(pub)
 
     def __load_key__(self, key_type: int):
-        key_file: str = 'privkey.pem' if key_type == 1 else 'cacert.pem'
+        key_file: str = "privkey.pem" if key_type == 1 else "cacert.pem"
         paths: List[str] = [self.__key_path, key_file]
         key_file = os.path.sep.join(paths)
         if not os.path.isfile(key_file):
             return
-        with open(key_file, 'rb') as kf:
+        with open(key_file, "rb") as kf:
             p = kf.read()
         if key_type == 1:
             self.__privkey__ = rsa.PrivateKey.load_pkcs1(p)
@@ -50,7 +52,7 @@ class KeyBot(object):
             self.__load_key__(0)
             if self.__pubkey__ is None:
                 return None
-        message: bytes = msg.encode('utf-8')
+        message: bytes = msg.encode("utf-8")
         crypto: bytes = rsa.encrypt(message, self.__pubkey__)
         return crypto
 

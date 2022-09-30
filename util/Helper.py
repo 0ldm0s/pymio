@@ -17,7 +17,6 @@ from datetime import datetime, timedelta, timezone
 from dateutil.relativedelta import relativedelta, MO, SU
 from decimal import Decimal
 from flask import request, current_app
-from daiquiri import KeywordArgumentAdapter
 from typing import Any, Tuple, Union, Optional, List, Dict
 
 
@@ -51,11 +50,11 @@ def check_ua(keys: List[str]) -> bool:
 
 
 def check_bot() -> bool:
-    return check_ua(['bot', 'spider', 'google'])
+    return check_ua(["bot", "spider", "google"])
 
 
 def check_ie() -> bool:
-    return check_ua(['MSIE', 'like gecko'])
+    return check_ua(["MSIE", "like gecko"])
 
 
 def in_dict(dic: dict, key: str) -> bool:
@@ -75,36 +74,36 @@ def is_enable(dic: dict, key: str) -> bool:
 
 
 def get_real_ip(
-        idx: int = 0, show_all: bool = False, ipv6only: bool = True, logger: Optional[KeywordArgumentAdapter] = None
+        idx: int = 0, show_all: bool = False, ipv6only: bool = True, console_log=None
 ) -> str:
-    real_ip: str = ''
-    if 'HTTP_CF_CONNECTING_IP' in request.environ:
-        real_ip = request.environ['HTTP_CF_CONNECTING_IP']
-    elif 'HTTP_X_CLIENT' in request.environ:
-        real_ip = request.environ['HTTP_X_CLIENT']
-    elif 'HTTP_FORWARDED' in request.environ:
-        http_forwarded: str = str(request.environ['HTTP_FORWARDED'])
-        xp = http_forwarded.split(';')
+    real_ip: str = ""
+    if "HTTP_CF_CONNECTING_IP" in request.environ:
+        real_ip = request.environ["HTTP_CF_CONNECTING_IP"]
+    elif "HTTP_X_CLIENT" in request.environ:
+        real_ip = request.environ["HTTP_X_CLIENT"]
+    elif "HTTP_FORWARDED" in request.environ:
+        http_forwarded: str = str(request.environ["HTTP_FORWARDED"])
+        xp = http_forwarded.split(";")
         for s in xp:
-            if s.startswith('for='):
-                _, real_ip, *_ = s.split('=')
+            if s.startswith("for="):
+                _, real_ip, *_ = s.split("=")
                 if check_is_ip(real_ip):
                     break
     if len(real_ip) > 0:
         return real_ip
-    if 'HTTP_X_REAL_IP' in request.environ:
-        real_ip = request.environ['HTTP_X_REAL_IP']
-    elif 'HTTP_X_FORWARDED_FOR' in request.environ:
-        real_ip = request.environ['HTTP_X_FORWARDED_FOR']
+    if "HTTP_X_REAL_IP" in request.environ:
+        real_ip = request.environ["HTTP_X_REAL_IP"]
+    elif "HTTP_X_FORWARDED_FOR" in request.environ:
+        real_ip = request.environ["HTTP_X_FORWARDED_FOR"]
     else:
-        real_ip = request.environ['REMOTE_ADDR']
-    if ',' in real_ip and not show_all:
+        real_ip = request.environ["REMOTE_ADDR"]
+    if "," in real_ip and not show_all:
         try:
-            _tmp_: List[str] = real_ip.split(',')
+            _tmp_: List[str] = real_ip.split(",")
             real_ip = _tmp_[idx].strip()
         except Exception as e:
-            if logger:
-                logger.error(e)
+            if console_log:
+                console_log.error(e)
     if not ipv6only:
         # for haproxy v4v6 mode
         real_ip = real_ip.replace("::ffff:", "") if real_ip.startswith("::ffff:") else real_ip
@@ -120,8 +119,8 @@ def check_is_ip(ip_addr: str) -> bool:
 
 
 def timestamp2str(
-        timestamp: int, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int = 0, minutes: int = 0,
-        logger: Optional[KeywordArgumentAdapter] = None
+        timestamp: int, iso_format: str = "%Y-%m-%d %H:%M:%S", hours: int = 0, minutes: int = 0,
+        console_log=None
 ) -> Optional[str]:
     dt = None
     try:
@@ -129,14 +128,14 @@ def timestamp2str(
         local_dt = utc_time + timedelta(hours=hours, minutes=minutes)
         dt = local_dt.strftime(iso_format)
     except Exception as e:
-        if logger:
-            logger.error(e)
+        if console_log:
+            console_log.error(e)
     return dt
 
 
 def str2timestamp(
-        date: str, iso_format: str = '%Y-%m-%d %H:%M:%S', hours: int = 0, minutes: int = 0,
-        logger: Optional[KeywordArgumentAdapter] = None
+        date: str, iso_format: str = "%Y-%m-%d %H:%M:%S", hours: int = 0, minutes: int = 0,
+        console_log=None
 ) -> Optional[int]:
     ts = None
     try:
@@ -147,8 +146,8 @@ def str2timestamp(
         timestamp = time.mktime(local_dt.timetuple())
         ts = int(timestamp)
     except Exception as e:
-        if logger:
-            logger.error(e)
+        if console_log:
+            console_log.error(e)
     return ts
 
 
@@ -159,7 +158,7 @@ def get_bool(obj: Any) -> bool:
             obj = True if str2int(obj) == 1 else False
         elif isinstance(obj, str):
             tmp: str = str(obj).strip().lower()
-            if tmp == 'y' or tmp == 't' or tmp == 'yes' or tmp == 'true':
+            if tmp == "y" or tmp == "t" or tmp == "yes" or tmp == "true":
                 obj = True
             else:
                 obj = False
@@ -169,12 +168,12 @@ def get_bool(obj: Any) -> bool:
 
 
 def get_root_path() -> str:
-    root_path = os.path.abspath(os.path.dirname(__file__) + '/../../')
+    root_path = os.path.abspath(os.path.dirname(__file__) + "/../../")
     return root_path
 
 
-def file_lock(filename: str, txt: str = ' ', exp: int = None, reader: bool = False) -> Tuple[int, str]:
-    lock = os.path.join(get_root_path(), 'lock')
+def file_lock(filename: str, txt: str = " ", exp: int = None, reader: bool = False) -> Tuple[int, str]:
+    lock = os.path.join(get_root_path(), "lock")
     if not os.path.exists(lock):
         os.makedirs(lock)
     lock = os.path.join(lock, filename)
@@ -183,35 +182,35 @@ def file_lock(filename: str, txt: str = ' ', exp: int = None, reader: bool = Fal
         return -1 if not is_ok else 1, txt
     # 如果文件存在，则判断是否需要检测过期
     if exp is None or not is_number(exp):
-        return 0, u'Locked.' if not reader else read_txt_file(lock)
+        return 0, u"Locked." if not reader else read_txt_file(lock)
     exp = int(exp)
     if exp <= 0:
-        return 0, u'Locked.' if not reader else read_txt_file(lock)
+        return 0, u"Locked." if not reader else read_txt_file(lock)
     exp = int(exp * 60)  # 是否有超过界限的问题？
     file_time = int(os.stat(lock).st_mtime)
     if exp >= (int(time.time()) - file_time):
         os.unlink(lock)
         return file_lock(filename, txt, exp)
     # 判断是否要读取内容
-    return 0, u'Locked.' if not reader else read_txt_file(lock)
+    return 0, u"Locked." if not reader else read_txt_file(lock)
 
 
-def write_txt_file(filename: str, txt: str = ' ', encoding: str = 'utf-8') -> Tuple[bool, str]:
+def write_txt_file(filename: str, txt: str = " ", encoding: str = "utf-8") -> Tuple[bool, str]:
     if os.path.isfile(filename):
         os.unlink(filename)
     try:
-        with open(filename, 'w', encoding=encoding) as locker:
+        with open(filename, "w", encoding=encoding) as locker:
             locker.write(txt)
-        return True, 'OK'
+        return True, "OK"
     except Exception as e:
         return False, str(e)
 
 
-def read_txt_file(filename: str, encoding: str = 'utf-8') -> str:
+def read_txt_file(filename: str, encoding: str = "utf-8") -> str:
     if not os.path.isfile(filename):
-        return ''
-    txt = ''
-    with open(filename, 'r', encoding=encoding, errors='ignore') as reader:
+        return ""
+    txt = ""
+    with open(filename, "r", encoding=encoding, errors="ignore") as reader:
         for line in reader:
             if line is None or len(line) <= 0:
                 continue
@@ -220,17 +219,17 @@ def read_txt_file(filename: str, encoding: str = 'utf-8') -> str:
 
 
 def write_file(
-        filename: str, txt: Union[str, bytes] = ' ', method: str = 'w+', encoding: str = 'utf-8'
+        filename: str, txt: Union[str, bytes] = " ", method: str = "w+", encoding: str = "utf-8"
 ) -> Tuple[bool, str]:
     try:
         with open(filename, method, encoding=encoding) as locker:
             locker.write(txt)
-        return True, 'OK'
+        return True, "OK"
     except Exception as e:
         return False, str(e)
 
 
-def read_file(filename: str, method: str = 'r', encoding: str = 'utf-8') -> Optional[Union[str, bytes]]:
+def read_file(filename: str, method: str = "r", encoding: str = "utf-8") -> Optional[Union[str, bytes]]:
     if not os.path.isfile(filename):
         return None
     with open(filename, method, encoding=encoding) as reader:
@@ -239,14 +238,14 @@ def read_file(filename: str, method: str = 'r', encoding: str = 'utf-8') -> Opti
 
 
 def file_unlock(filename: str) -> Tuple[int, str]:
-    lock: str = os.path.join(get_root_path(), 'lock')
+    lock: str = os.path.join(get_root_path(), "lock")
     if not os.path.exists(lock):
-        return 1, u'Unlocked.'
+        return 1, u"Unlocked."
     try:
         lock = os.path.join(lock, filename)
         if os.path.isfile(lock):
             os.unlink(lock)
-        return 1, u'Unlocked.'
+        return 1, u"Unlocked."
     except Exception as e:
         return -1, str(e)
 
@@ -254,13 +253,13 @@ def file_unlock(filename: str) -> Tuple[int, str]:
 def random_str(random_length: int = 8) -> str:
     a: List[str] = list(string.ascii_letters)
     random.shuffle(a)
-    return ''.join(a[:random_length])
+    return "".join(a[:random_length])
 
 
 def random_number_str(random_length: int = 8) -> str:
     a: List[str] = [str(0), str(1), str(2), str(3), str(4), str(5), str(6), str(7), str(8), str(9)]
     random.shuffle(a)
-    return ''.join(a[:random_length])
+    return "".join(a[:random_length])
 
 
 def random_char(size: int = 6, special: bool = False) -> str:
@@ -268,8 +267,8 @@ def random_char(size: int = 6, special: bool = False) -> str:
     import string
     chars = string.ascii_letters + string.digits
     if special:
-        chars += '!@#$%^&*'
-    return ''.join(random.choice(chars) for _ in range(size))
+        chars += "!@#$%^&*"
+    return "".join(random.choice(chars) for _ in range(size))
 
 
 def get_file_list(
@@ -279,7 +278,7 @@ def get_file_list(
     if files is None or not isinstance(files, list):
         return files if isinstance(files, list) else []
     for lists in os.listdir(root_path):
-        if lists.startswith('.') or lists.endswith('.pyc'):
+        if lists.startswith(".") or lists.endswith(".pyc"):
             if not include_hide_file:
                 continue
         if is_full_path:
@@ -287,8 +286,8 @@ def get_file_list(
         else:
             path = lists
         if is_sub and os.path.isdir(os.path.join(root_path, lists)):
-            files = get_file_list(root_path=os.path.join(root_path, lists), files=files, is_sub=is_sub,
-                                  is_full_path=is_full_path)
+            files = get_file_list(
+                root_path=os.path.join(root_path, lists), files=files, is_sub=is_sub, is_full_path=is_full_path)
         else:
             files.append(path)
     return files
@@ -336,25 +335,25 @@ def is_number(s: Any) -> bool:
     return False
 
 
-def safe_html_code(string_html: str = '', is_all: bool = True) -> str:
+def safe_html_code(string_html: str = "", is_all: bool = True) -> str:
     if string_html is None:
-        return ''
+        return ""
     string_html = string_html if isinstance(string_html, str) else str(string_html)
     if is_all:
-        return string_html.replace('<', '&lt;').replace('>', '&gt;').replace('%3C', '&lt;').replace('%3E', '&gt;')
-    string_html = string_html.replace('%3C', '&lt;').replace('%3E', '&gt;')
-    re_script_start = re.compile('<\s*script[^>]*>', re.IGNORECASE)
-    re_script_end = re.compile('<\s*/\s*script\s*>', re.IGNORECASE)
-    re_object_start = re.compile('<\s*object[^>]*>', re.IGNORECASE)
-    re_object_end = re.compile('<\s*/\s*object\s*>', re.IGNORECASE)
-    re_iframe_start = re.compile('<\s*iframe[^>]*>', re.IGNORECASE)
-    re_iframe_end = re.compile('<\s*/\s*iframe\s*>', re.IGNORECASE)
-    string_html = re_script_start.sub('', string_html)  # 直接去掉
-    string_html = re_script_end.sub('', string_html)
-    string_html = re_object_start.sub('', string_html)
-    string_html = re_object_end.sub('', string_html)
-    string_html = re_iframe_start.sub('', string_html)
-    string_html = re_iframe_end.sub('', string_html)
+        return string_html.replace("<", "&lt;").replace(">", "&gt;").replace("%3C", "&lt;").replace("%3E", "&gt;")
+    string_html = string_html.replace("%3C", "&lt;").replace("%3E", "&gt;")
+    re_script_start = re.compile("<\s*script[^>]*>", re.IGNORECASE)
+    re_script_end = re.compile("<\s*/\s*script\s*>", re.IGNORECASE)
+    re_object_start = re.compile("<\s*object[^>]*>", re.IGNORECASE)
+    re_object_end = re.compile("<\s*/\s*object\s*>", re.IGNORECASE)
+    re_iframe_start = re.compile("<\s*iframe[^>]*>", re.IGNORECASE)
+    re_iframe_end = re.compile("<\s*/\s*iframe\s*>", re.IGNORECASE)
+    string_html = re_script_start.sub("", string_html)  # 直接去掉
+    string_html = re_script_end.sub("", string_html)
+    string_html = re_object_start.sub("", string_html)
+    string_html = re_object_end.sub("", string_html)
+    string_html = re_iframe_start.sub("", string_html)
+    string_html = re_iframe_end.sub("", string_html)
     return string_html
 
 
@@ -376,15 +375,15 @@ def ant_path_matcher(ant_path: str, expected_path: str) -> bool:
 
 
 def check_email(email: str) -> bool:
-    re_str = r'^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}$'
+    re_str = r"^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}$"
     if re.match(re_str, email) is None:
         return False
     return True
 
 
-def get_args_from_dict(dt: Dict, ky: str, default: Optional[Any] = '', force_str: bool = False) -> Optional[Any]:
+def get_args_from_dict(dt: Dict, ky: str, default: Optional[Any] = "", force_str: bool = False) -> Optional[Any]:
     if default is None and force_str:
-        default = ''
+        default = ""
     word = default if ky not in dt else dt[ky]
     if is_number(word):
         if force_str:
@@ -393,30 +392,30 @@ def get_args_from_dict(dt: Dict, ky: str, default: Optional[Any] = '', force_str
     if isinstance(word, str):
         return str(word).strip()
     if force_str:
-        return ''
+        return ""
     if word is None:
         return default
     return word
 
 
 def get_variable_from_request(
-        key_name: str, default: Optional[Any] = '', method: str = 'check', force_str: bool = False
+        key_name: str, default: Optional[Any] = "", method: str = "check", force_str: bool = False
 ) -> Optional[Any]:
-    method = 'check' if method is None or not isinstance(method, str) else str(method).strip().lower()
+    method = "check" if method is None or not isinstance(method, str) else str(method).strip().lower()
     if default is None and force_str:
-        default = ''
-    if method == 'check':
+        default = ""
+    if method == "check":
         word = request.form.get(key_name, None)
         if word is None:
             word = request.args.get(key_name, None)
             if key_name in request.headers:
                 word = request.headers[key_name]
         word = default if word is None else word
-    elif method == 'post':
+    elif method == "post":
         word = request.form.get(key_name, default)
-    elif method == 'get':
+    elif method == "get":
         word = request.args.get(key_name, default)
-    elif method == 'header':
+    elif method == "header":
         word = request.headers[key_name] if key_name in request.headers else default
     else:
         return default
@@ -455,10 +454,10 @@ def get_this_week_range(timestamp: int, hours: int = 0, minutes: int = 0) -> Tup
 
 def get_this_month_range(timestamp: int, hours: int = 0, minutes: int = 0) -> Tuple[int, int]:
     try:
-        local_date: Optional[str] = timestamp2str(timestamp, '%Y-%m', hours=hours, minutes=minutes)
+        local_date: Optional[str] = timestamp2str(timestamp, "%Y-%m", hours=hours, minutes=minutes)
         if local_date is None:
             return 0, 0
-        start_year, start_month, *_ = local_date.split('-')
+        start_year, start_month, *_ = local_date.split("-")
         return get_month_range(start_year=int(start_year), start_month=int(start_month), long=0)
     except Exception as e:
         str(e)
@@ -468,7 +467,7 @@ def get_this_month_range(timestamp: int, hours: int = 0, minutes: int = 0) -> Tu
 def get_month_range(start_year: int, start_month: int, long: int) -> Tuple[int, int]:
     try:
         long = 1 if not is_number(long) else int(long)
-        timestamp: int = str2timestamp('{}-{}-1'.format(start_year, start_month), '%Y-%m-%d')
+        timestamp: int = str2timestamp(f"{start_year}-{start_month}-1", "%Y-%m-%d")
         utc_time = datetime.fromtimestamp(timestamp)
         if long >= 0:
             first_day = utc_time + relativedelta(day=1, hour=0, minute=0, second=0)
@@ -483,17 +482,17 @@ def get_month_range(start_year: int, start_month: int, long: int) -> Tuple[int, 
 
 
 def get_today(is_timestamp: bool = False, hours: int = 0, minutes: int = 0) -> Union[str, int]:
-    dn: str = timestamp2str(get_utc_now(), '%Y-%m-%d', hours, minutes)
+    dn: str = timestamp2str(get_utc_now(), "%Y-%m-%d", hours, minutes)
     if not is_timestamp:
         return dn
-    timestamp: int = str2timestamp(dn, '%Y-%m-%d')
+    timestamp: int = str2timestamp(dn, "%Y-%m-%d")
     return timestamp
 
 
 def get_yesterday(is_timestamp: bool = False, hours: int = 0, minutes: int = 0) -> Union[str, int]:
     dt, _ = get_this_days_range(-1, hours, minutes)
     if not is_timestamp:
-        return timestamp2str(dt, '%Y-%m-%d')
+        return timestamp2str(dt, "%Y-%m-%d")
     return dt
 
 
@@ -501,8 +500,8 @@ def get_this_days_range(long: int, hours: int = 0, minutes: int = 0) -> Tuple[in
     long = 1 if not is_number(long) else int(long)
     long = 1 if long == 0 else long
     # 获取当前日期
-    dn: str = timestamp2str(get_utc_now(), '%Y-%m-%d', hours, minutes)
-    start_time: int = str2timestamp(dn, '%Y-%m-%d', hours, minutes)
+    dn: str = timestamp2str(get_utc_now(), "%Y-%m-%d", hours, minutes)
+    start_time: int = str2timestamp(dn, "%Y-%m-%d", hours, minutes)
     end_time: int
     if long < 0:
         # 如果是往前推的天数
@@ -532,18 +531,18 @@ def microtime(get_as_float=False, max_ms_lan: int = 6, hours: int = 0, minutes: 
         else:
             max_loop: int = (max_ms_lan - len(ms_txt)) + 2
             for i in range(max_loop):
-                ms_txt = '{}0'.format(ms_txt)
+                ms_txt = f"{ms_txt}0"
         a = rounded(Decimal(ms_txt), max_ms_lan)
         b = Decimal(t)
         dt = a + b
         return str(dt)
     else:
-        return '%.8f %d' % (ms, t)
+        return "%.8f %d" % (ms, t)
 
 
 def md5(txt: str) -> str:
     md = hashlib.md5()
-    md.update(txt.encode('utf-8'))
+    md.update(txt.encode("utf-8"))
     return md.hexdigest()
 
 
@@ -551,21 +550,21 @@ def base64_encode(message: bytes, is_bytes: bool = True) -> Union[bytes, str]:
     crypto: bytes = base64.b64encode(message)
     if is_bytes:
         return crypto
-    return crypto.decode('utf-8')
+    return crypto.decode("utf-8")
 
 
 def base64_decode(crypto: str, is_bytes: bool = True) -> Union[bytes, str]:
     missing_padding = 4 - len(crypto) % 4
     if missing_padding:
-        crypto += '=' * missing_padding
+        crypto += "=" * missing_padding
     message: bytes = base64.b64decode(crypto)
     if is_bytes:
         return message
-    return message.decode('utf-8')
+    return message.decode("utf-8")
 
 
 def base64_txt_encode(message: str) -> str:
-    return str(base64_encode(message.encode('utf-8'), is_bytes=False))
+    return str(base64_encode(message.encode("utf-8"), is_bytes=False))
 
 
 def base64_txt_decode(crypto: str) -> str:
@@ -576,23 +575,22 @@ def rounded(numerical: Any, decimal: int = 2) -> Decimal:
     decimal = 0 if not is_number(decimal) or decimal <= 0 else decimal
     decimal_place: Decimal
     if not is_number(numerical):
-        return Decimal('0')
+        return Decimal("0")
     numerical_str: str = str(numerical)
     if decimal <= 0:
-        decimal_place = Decimal(numerical_str).quantize(Decimal('1'), rounding='ROUND_HALF_UP')
+        decimal_place = Decimal(numerical_str).quantize(Decimal("1"), rounding="ROUND_HALF_UP")
     else:
-        zero: str = '0' * (decimal - 1)
-        decimal_place = Decimal(numerical_str).quantize(Decimal(f'0.{zero}1'), rounding='ROUND_HALF_UP')
+        zero: str = "0" * (decimal - 1)
+        decimal_place = Decimal(numerical_str).quantize(Decimal(f"0.{zero}1"), rounding="ROUND_HALF_UP")
     return decimal_place
 
 
 def easy_encrypted(
-        text: str, is_decode=True, key: Optional[str] = None, expiry: int = 0,
-        logger: Optional[KeywordArgumentAdapter] = None
+        text: str, is_decode=True, key: Optional[str] = None, expiry: int = 0, console_log=None
 ) -> Optional[str]:
     try:
         if key is None or len(key) <= 0:
-            plan_key: str = current_app.config['SECRET_KEY']
+            plan_key: str = current_app.config["SECRET_KEY"]
         else:
             plan_key = key
         key_c_length: int = 4
@@ -601,25 +599,25 @@ def easy_encrypted(
         key_b: str = md5(key[16:32])
         key_c: str
         if key_c_length <= 0:
-            key_c = ''
+            key_c = ""
         else:
             if is_decode:
                 key_c = text[0:key_c_length]
             else:
                 key_c = md5(microtime())[-key_c_length:]
-        crypt_key: str = key_a + '' + md5(key_a + '' + key_c)
+        crypt_key: str = key_a + "" + md5(key_a + "" + key_c)
         key_length: int = len(crypt_key)
         new_data: bytes
         if is_decode:
             new_data = base64_decode(text[key_c_length:])
         else:
             expiry = expiry + get_utc_now() if expiry > 0 else 0
-            expiry_str: str = '%010d' % expiry
-            plan_text: str = expiry_str + '' + md5(text + '' + key_b)[0:16] + '' + text
-            new_data = plan_text.encode('latin-1')
+            expiry_str: str = "%010d" % expiry
+            plan_text: str = expiry_str + "" + md5(text + "" + key_b)[0:16] + "" + text
+            new_data = plan_text.encode("latin-1")
         string_length: int = len(new_data)
-        decode_result: str = ''
-        encode_result: bytes = b''
+        decode_result: str = ""
+        encode_result: bytes = b""
         box: List[int] = list(range(0, 256))
         rnd_key: List[int] = []
         for i in range(256):
@@ -646,7 +644,7 @@ def easy_encrypted(
             if is_decode:
                 decode_result = decode_result + chr(co)
             else:
-                encode_result = encode_result + bytes(chr(co), encoding='latin-1')
+                encode_result = encode_result + bytes(chr(co), encoding="latin-1")
         if is_decode:
             t1: int = int(decode_result[0:10])
             t2: str = decode_result[10:26]
@@ -655,21 +653,22 @@ def easy_encrypted(
                 return decode_result[26:]
         else:
             b64code: bytes = base64_encode(encode_result)
-            result: str = b64code.decode('latin-1')
-            result = result.replace('=', '')
-            result = key_c + '' + result
-            test_password: Optional[str] = easy_encrypted(result, key=plan_key, expiry=expiry, logger=logger)
+            result: str = b64code.decode("latin-1")
+            result = result.replace("=", "")
+            result = key_c + "" + result
+            test_password: Optional[str] = easy_encrypted(
+                result, key=plan_key, expiry=expiry, console_log=console_log)
             if test_password == text:
                 return result
     except Exception as e:
-        if logger:
-            logger.error(e)
+        if console_log:
+            console_log.error(e)
     return None
 
 
 def check_chinese_mobile(mobile: str) -> bool:
     try:
-        return re.match('^1\d{10}$', mobile) is not None
+        return re.match("^1\d{10}$", mobile) is not None
     except Exception as e:
         str(e)
     return False
@@ -682,6 +681,6 @@ def str2int(text: str, default: Optional[int] = 0) -> Optional[int]:
 
 
 def eat_html(html: str) -> str:
-    dr = re.compile(r'<[^>]+>', re.S)
-    dd = dr.sub('', html)
+    dr = re.compile(r"<[^>]+>", re.S)
+    dd = dr.sub("", html)
     return dd
