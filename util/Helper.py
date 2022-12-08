@@ -835,3 +835,18 @@ def raw_to_der_signature(raw_sig: bytes, curve: EllipticCurve) -> bytes:
     s = bytes_to_number(raw_sig[num_bytes:])
 
     return encode_dss_signature(r, s)
+
+
+def chear_list(waiting: List, check_type: type = str) -> List:
+    checked: List = []
+    if waiting is None or not isinstance(waiting, list):
+        return checked
+    for _item_ in waiting:
+        if _item_ is None or not isinstance(_item_, check_type):
+            continue
+        if check_type == str:
+            _item_ = str(_item_).strip()
+            if len(_item_) == 0:
+                continue
+        checked.append(_item_)
+    return checked

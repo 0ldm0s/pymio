@@ -8,7 +8,7 @@ from tornado.wsgi import WSGIContainer
 from typing import List, Tuple, Optional, Callable, Any, Type, Dict, Union
 from types import TracebackType
 
-MIO_SYSTEM_VERSION = "1.6.5"
+MIO_SYSTEM_VERSION = "1.6.6"
 
 
 class WSGIContainerWithThread(WSGIContainer):
