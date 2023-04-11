@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import asyncio
 
 root_path: str = os.path.abspath(os.path.dirname(__file__) + "/../")
 sys.path.append(root_path)
@@ -68,28 +69,41 @@ app, wss, console_log = create_app(MIO_CONFIG, root_path, MIO_APP_CONFIG, log_le
 wss.append((r".*", FallbackHandler, dict(fallback=WSGIContainerWithThread(app))))
 mWSGI: Application = Application(wss, debug=is_debug, autoreload=False)
 
+
+def create_server():
+    server = HTTPServer(mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size)
+    if domain_socket is not None:
+        from tornado.netutil import bind_unix_socket
+
+        socket = bind_unix_socket(domain_socket, mode=0o777)
+        server.add_socket(socket)
+        console_log.info(f"WebServer listen in {domain_socket}")
+    else:
+        server.bind(MIO_PORT, MIO_HOST)
+        console_log.info(f"WebServer listen in http://{MIO_HOST}:{MIO_PORT}")
+    if MIO_LIMIT_CPU <= 0:
+        import multiprocessing
+
+        workers = multiprocessing.cpu_count()
+        server.start(workers)
+    else:
+        server.start(MIO_LIMIT_CPU)
+    return server
+
+
+async def main():
+    create_server()
+    await asyncio.Event().wait()
+
+
 if __name__ == "__main__":
     try:
-        server = HTTPServer(mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size)
-        if domain_socket is not None:
-            from tornado.netutil import bind_unix_socket
-
-            socket = bind_unix_socket(domain_socket, mode=0o777)
-            server.add_socket(socket)
-            console_log.info(f"WebServer listen in {domain_socket}")
+        if MIO_LIMIT_CPU == 1:
+            asyncio.run(main())
         else:
-            server.bind(MIO_PORT, MIO_HOST)
-            console_log.info(f"WebServer listen in http://{MIO_HOST}:{MIO_PORT}")
-        if MIO_LIMIT_CPU <= 0:
-            import multiprocessing
-
-            workers = multiprocessing.cpu_count()
-            server.start(workers)
-        else:
-            server.start(MIO_LIMIT_CPU)
-        # 性能下降巨大，最好不要用单例模式
-        # 哪怕报告警也不应舍弃fork模式
-        get_event_loop().run_forever()
+            create_server()
+            get_event_loop().run_forever()
     except KeyboardInterrupt:
-        get_event_loop().stop()
+        if MIO_LIMIT_CPU != 1:
+            get_event_loop().stop()
         console_log.info("WebServer Closed.")
