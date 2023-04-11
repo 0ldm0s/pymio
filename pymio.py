@@ -71,7 +71,7 @@ mWSGI: Application = Application(wss, debug=is_debug, autoreload=False)
 
 
 def create_server():
-    server = HTTPServer(mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size)
+    server = HTTPServer(mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size, xheaders=True)
     if domain_socket is not None:
         from tornado.netutil import bind_unix_socket
 
