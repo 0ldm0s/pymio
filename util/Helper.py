@@ -850,3 +850,13 @@ def chear_list(waiting: List, check_type: type = str) -> List:
                 continue
         checked.append(_item_)
     return checked
+
+
+def process_bar(num, total):
+    rate = float(num) / total
+    ratenum = int(100 * rate)
+    r = "\r[{}{}]{}%".format("*" * ratenum, " " * (100 - ratenum), ratenum)
+    sys.stdout.write(r)
+    if num >= total:
+        sys.stdout.write("\r\n")
+    sys.stdout.flush()
