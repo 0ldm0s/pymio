@@ -4,11 +4,11 @@ import asyncio
 from tornado import escape, gen
 from tornado import httputil
 from tornado.httputil import ResponseStartLine, HTTPHeaders, HTTPServerRequest
-from tornado.wsgi import WSGIContainer
+from .tornado.wsgi import WSGIContainer
 from typing import List, Tuple, Optional, Callable, Any, Type, Dict, Union
 from types import TracebackType
 
-MIO_SYSTEM_VERSION = "1.6.9"
+MIO_SYSTEM_VERSION = "1.7.0"
 
 
 class WSGIContainerWithThread(WSGIContainer):
