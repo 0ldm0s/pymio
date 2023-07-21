@@ -1,0 +1,93 @@
+<style>
+  #flDebug .flDebugPanelContent {
+    overflow: scroll;
+    overflow-x: hidden;
+  }
+
+  #flDebug .mongo-raw-response-data, #flDebug .mongo-raw-command-data, .mongo-op-table {
+    display: none;
+  }
+
+  #flDebug .panelContent .mongo-op-table,
+  #flDebug .panelContent .mongo-insert-data table {
+    display: table;
+  }
+
+</style>
+
+{% macro render_stats(title, queries, slow_query_limit) %}
+
+  <h4>{{ title }}</h4>
+  {% if queries %}
+    <table class="mongo-op-table">
+      <thead>
+      <tr>
+        <th>Time (ms)</th>
+        <th>Size</th>
+        <th>Database</th>
+        <th>Collection</th>
+        <th>Command name</th>
+        <th>Operation id</th>
+        <th>Server command</th>
+        <th>Response data</th>
+        <th>Request status</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for query in queries %}
+        <tr class="{{ loop.cycle('flDebugOdd','flDebugEven') }}">
+          {% set colspan = 9 %}
+          <td {% if query.time > slow_query_limit %}style="color:red;" {% endif %}>
+            {{ query.time|round(3) }}
+          </td>
+          <td>{{ query.size|round(2) }}Kb</td>
+          <td>{{ query.database }}</td>
+          <td>{{ query.collection }}</td>
+          <td>{{ query.command_name }}</td>
+          <td>{{ query.operation_id }}</td>
+          <td>
+            <a href="javascript:void(0);" class="mongo-toggle-raw-command-data"
+               data-row="mongo-raw-command-data-{{ loop.index }}">Toggle</a>
+          </td>
+          <td>
+            <a href="javascript:void(0);" class="mongo-toggle-raw-response-data"
+               data-row="mongo-raw-response-data-{{ loop.index }}">Toggle</a>
+          </td>
+          <td>{{ query.request_status }}</td>
+        </tr>
+
+        <tr class="{{ loop.cycle('flDebugOdd', 'flDebugEven') }} mongo-raw-command-data"
+            id="mongo-raw-command-data-{{ loop.index }}">
+          <td colspan="{{ colspan }}">
+            <pre>{{ query.server_command|pprint }}</pre>
+          </td>
+        </tr>
+
+        <tr class="{{ loop.cycle('flDebugOdd', 'flDebugEven') }} mongo-raw-response-data"
+            id="mongo-raw-response-data-{{ loop.index }}">
+          <td colspan="{{ colspan }}">
+            <pre>{{ query.server_response|pprint }}</pre>
+          </td>
+        </tr>
+
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No {{ title|lower }} recorded</p>
+  {% endif %}
+{% endmacro %}
+
+{{ render_stats("Queries", queries, slow_query_limit) }}
+
+<script>
+  (function ($) {
+    $('a.mongo-toggle-raw-command-data').click(function () {
+      $("#" + $(this).attr('data-row')).toggle();
+    });
+
+    $('a.mongo-toggle-raw-response-data').click(function () {
+      $("#" + $(this).attr('data-row')).toggle();
+    });
+  })(fldt.$);
+</script>

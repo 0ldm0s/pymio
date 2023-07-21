@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 import orjson
+from flask.json.provider import JSONProvider
+from typing import Union
 
 
 class ORJSONDecoder:
@@ -21,3 +23,11 @@ class ORJSONEncoder:
     def encode(obj):
         # decode back to str, as orjson returns bytes
         return orjson.dumps(obj).decode("utf-8")
+
+
+class MioJsonProvider(JSONProvider):
+    def dumps(self, obj, **kwargs):
+        return orjson.dumps(obj)
+
+    def loads(self, s: Union[bytes, bytearray, memoryview, str], **kwargs):
+        return orjson.loads(s)
