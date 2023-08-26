@@ -27,18 +27,30 @@ def run(clazz=None, worker=None, control=None):
             if len(_cmd_) <= 0:
                 continue
             if _cmd_.find("=") >= 0:
-                _cmd_ = "--" + _cmd_
+                # FIXME 需要更优雅的方案
+                _lins: List[str] = _cmd_.split("=")
+                _an: str = _lins.pop(0)
+                if len(_an) == 1:
+                    # 不管什么原因，只要只有1个字符，就走-
+                    _cmd_ = "-{} {}".format(_an, " ".join(_lins))
+                else:
+                    _cmd_ = "--{}={}".format(_an, "=".join(_lins))
             else:
                 _cmd_ = "-" + _cmd_
             cmd_lines.append(_cmd_)
-    if worker is None and control is not None:
+    elif control is not None:
         cmd_lines.append("control")
         tmp: List[str] = str(control).split(" ")
         for _cmd_ in tmp:
-            if len(_cmd_) <= 0:
-                continue
             if _cmd_.find("=") >= 0:
-                _cmd_ = "--" + _cmd_
+                # FIXME 需要更优雅的方案
+                _lins: List[str] = _cmd_.split("=")
+                _an: str = _lins.pop(0)
+                if len(_an) == 1:
+                    # 不管什么原因，只要只有1个字符，就走-
+                    _cmd_ = "-{} {}".format(_an, " ".join(_lins))
+                else:
+                    _cmd_ = "--{}={}".format(_an, "=".join(_lins))
             else:
                 _cmd_ = "-" + _cmd_
             cmd_lines.append(_cmd_)
