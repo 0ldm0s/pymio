@@ -32,11 +32,14 @@ def run(clazz=None, worker=None, control=None):
                 _an: str = _lins.pop(0)
                 if len(_an) == 1:
                     # 不管什么原因，只要只有1个字符，就走-
-                    _cmd_ = "-{} {}".format(_an, " ".join(_lins))
+                    _cmd_ = "-{}{}".format(_an, " ".join(_lins))
                 else:
                     _cmd_ = "--{}={}".format(_an, "=".join(_lins))
             else:
-                _cmd_ = "-" + _cmd_
+                if len(_cmd_) == 1:
+                    _cmd_ = "-" + _cmd_
+                else:
+                    _cmd_ = "--" + _cmd_
             cmd_lines.append(_cmd_)
     elif control is not None:
         cmd_lines.append("control")
@@ -48,11 +51,14 @@ def run(clazz=None, worker=None, control=None):
                 _an: str = _lins.pop(0)
                 if len(_an) == 1:
                     # 不管什么原因，只要只有1个字符，就走-
-                    _cmd_ = "-{} {}".format(_an, " ".join(_lins))
+                    _cmd_ = "-{}{}".format(_an, "".join(_lins))
                 else:
                     _cmd_ = "--{}={}".format(_an, "=".join(_lins))
             else:
-                _cmd_ = "-" + _cmd_
+                if len(_cmd_) == 1:
+                    _cmd_ = "-" + _cmd_
+                else:
+                    _cmd_ = "--" + _cmd_
             cmd_lines.append(_cmd_)
     sys.argv = cmd_lines
     sys.exit(main())
