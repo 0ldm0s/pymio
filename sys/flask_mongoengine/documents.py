@@ -11,7 +11,7 @@ from mio.sys.flask_mongoengine.decorators import wtf_required
 from mio.sys.flask_mongoengine.pagination import ListFieldPagination, Pagination
 
 try:
-    from flask_mongoengine.wtf.models import ModelForm
+    from mio.sys.flask_mongoengine.wtf.models import ModelForm
 except ImportError:  # pragma: no cover
     ModelForm = None
 logger = logging.getLogger("flask_mongoengine")

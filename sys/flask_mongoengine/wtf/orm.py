@@ -320,7 +320,7 @@ def model_form(
     """
     Create a wtforms Form for a given mongoengine Document schema::
 
-        from flask_mongoengine.wtf import model_form
+        from mio.sys.flask_mongoengine.wtf import model_form
         from myproject.myapp.schemas import Article
         ArticleForm = model_form(Article)
 
