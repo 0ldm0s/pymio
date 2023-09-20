@@ -13,6 +13,9 @@ flask-redis
 flask-mail
 flask-caching
 flask-debugtoolbar
+sqlalchemy
+flask-sqlalchemy
+pg8000
 mongoengine
 daiquiri
 fleming

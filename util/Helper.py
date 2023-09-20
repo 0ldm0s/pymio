@@ -391,7 +391,9 @@ def check_email(email: str) -> bool:
     return True
 
 
-def get_args_from_dict(dt: Dict, ky: str, default: Optional[Any] = "", force_str: bool = False) -> Optional[Any]:
+def get_args_from_dict(
+        dt: Dict, ky: str, default: Optional[Any] = "", force_str: bool = False, check_type: bool = True,
+) -> Optional[Any]:
     if default is None and force_str:
         default = ""
     word = default if ky not in dt else dt[ky]
@@ -405,6 +407,9 @@ def get_args_from_dict(dt: Dict, ky: str, default: Optional[Any] = "", force_str
         return ""
     if word is None:
         return default
+    # ! 判断是否跟默认值一致
+    if default and check_type and type(word) != type(default):
+        return default  # 避免出现需要list但实际给了str的情况
     return word
 
 
