@@ -15,6 +15,7 @@ from flask_caching import Cache
 from flask_redis import FlaskRedis
 from flask_wtf.csrf import CSRFProtect
 from flask_sqlalchemy import SQLAlchemy
+from flask_socketio import SocketIO
 from tornado.ioloop import IOLoop
 from typing import Tuple, Optional, List, Union
 from mio.util.Helper import in_dict, is_enable, is_number, get_canonical_os_name
@@ -32,6 +33,7 @@ csrf: Optional[CSRFProtect] = None
 cache: Optional[Cache] = None
 babel: Optional[Babel] = None
 celery_app: Optional[Celery] = None
+socketio: Optional[SocketIO] = None
 os_name: str = get_canonical_os_name()
 
 
@@ -39,9 +41,10 @@ def create_app(
         config_name: str, root_path: Optional[str] = None, config_clz: Optional[str] = None,
         logger_type: LoggerType = LoggerType, log_level: int = logging.DEBUG
 ) -> Tuple[Flask, List[tuple], LogHandler]:
-    global cache, babel, csrf, redis_db, db, rdb, mail, celery_app
+    global cache, babel, csrf, redis_db, db, rdb, mail, celery_app, socketio
     console = LogHandler("PyMio", logger_type=logger_type, log_level=log_level)
     console.info(f"Initializing the system......profile: {config_name}")
+    console.info(f"Pymio Version: {MIO_SYSTEM_VERSION}")
     config_clz: str = "config" if not isinstance(config_clz, str) else config_clz.strip()
     config_path: str = os.path.join(root_path, config_clz.replace(".", "/"))
     clazz = __import__(config_clz, globals(), fromlist=["config"])
@@ -85,6 +88,8 @@ def create_app(
         if is_enable(base_config["csrf"], "enable"):
             csrf = CSRFProtect()
             csrf.init_app(app)
+    if is_enable(app.config, "MIO_SOCKETIO"):
+        socketio = SocketIO(app, cors_allowed_origins='*')
     if is_enable(app.config, "MIO_MAIL"):
         from flask_mail import Mail
         mail = Mail()

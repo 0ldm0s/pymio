@@ -78,7 +78,7 @@ def _update_json_provider(superclass):
                 (BaseDocument, QuerySet, CommandCursor, DBRef, ObjectId),
             ):
                 return _convert_mongo_objects(obj)
-            return superclass.default(obj)
+            return super().default(obj)
 
     return MongoEngineJSONProvider
 
@@ -92,7 +92,8 @@ if use_json_provider():
 
     MongoEngineJSONProvider = _update_json_provider(DefaultJSONProvider)
 else:
-    from flask.json import JSONEncoder
+    from json import JSONEncoder
+    # from flask.json import JSONEncoder
 
     MongoEngineJSONEncoder = _make_encoder(JSONEncoder)
 # End of compatibility code

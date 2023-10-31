@@ -68,6 +68,7 @@ max_buffer_size, max_body_size = get_buffer_size()
 app, wss, console_log = create_app(MIO_CONFIG, root_path, MIO_APP_CONFIG, log_level=log_level, logger_type=log_type)
 wss.append((r".*", FallbackHandler, dict(fallback=WSGIContainerWithThread(app))))
 mWSGI: Application = Application(wss, debug=is_debug, autoreload=False)
+from mio.sys import socketio
 
 
 def create_server():
@@ -98,12 +99,16 @@ async def main():
 
 if __name__ == "__main__":
     try:
-        if MIO_LIMIT_CPU == 1:
-            asyncio.run(main())
+        if socketio:
+            socketio.run(app, host=MIO_HOST, port=MIO_PORT)
         else:
-            create_server()
-            get_event_loop().run_forever()
+            if MIO_LIMIT_CPU == 1:
+                asyncio.run(main())
+            else:
+                create_server()
+                get_event_loop().run_forever()
     except KeyboardInterrupt:
-        if MIO_LIMIT_CPU != 1:
+        if MIO_LIMIT_CPU != 1 and socketio is None:
             get_event_loop().stop()
+    finally:
         console_log.info("WebServer Closed.")
