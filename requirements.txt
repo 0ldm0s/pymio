@@ -22,13 +22,11 @@ pg8000
 mongoengine
 daiquiri
 fleming
-uvloop
 python-dateutil
 celery
 asgiref
 zstandard
 orjson
 markdown
-python-snappy
 cryptography
 celery-aio-pool
