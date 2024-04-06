@@ -48,7 +48,7 @@ def get_canonical_os_name() -> str:
         if "freebsd" in sys.platform:
             return "freebsd"
         return "bsd"
-    return "unkonw"
+    return "unknown"
 
 
 def check_ua(keys: List[str]) -> bool:

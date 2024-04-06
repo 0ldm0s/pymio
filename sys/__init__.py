@@ -158,10 +158,15 @@ def init_timezone():
 
 
 def init_uvloop():
-    if os_name in ["windows", "unkonw"]:
-        IOLoop.configure("tornado.platform.asyncio.AsyncIOLoop")
-        return
     try:
+        if os_name == "unknown":
+            IOLoop.configure("tornado.platform.asyncio.AsyncIOLoop")
+            return
+        if os_name == "windows":
+            import winloop
+            asyncio.set_event_loop_policy(winloop.EventLoopPolicy())
+            winloop.install()
+            return
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     except Exception as e:
@@ -196,7 +201,7 @@ def get_buffer_size() -> Tuple[Optional[int], Optional[int]]:
 
 
 def get_cpu_limit() -> int:
-    if os_name in ["windows", "unkonw"]:
+    if os_name in ["windows", "unknown"]:
         # for windows os, just 1. test in win11
         return 1
     cpu_limit: int = 1 if not is_number(os.environ.get("MIO_LIMIT_CPU")) else int(os.environ.get("MIO_LIMIT_CPU"))
