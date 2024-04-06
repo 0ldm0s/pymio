@@ -53,7 +53,7 @@ for arg in sys.argv:
         pid_file_path: str = temp[1]
         continue
     if temp[0].lower() == "cpu_limit":
-        if os_name in ["windows", "unkonw"]:
+        if os_name in ["windows", "unknown"]:
             # 不可在windows下设置cpu数
             continue
         MIO_LIMIT_CPU = 1 if not is_number(temp[1]) else str2int(temp[1])
