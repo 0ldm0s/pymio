@@ -97,6 +97,8 @@ def create_app(
     if is_enable(app.config, "MONGODB_ENABLE"):
         db = MongoEngine()
         db.init_app(app)
+        # ! 至少输出警告级别
+        logging.getLogger('pymongo').setLevel(logging.WARN)
     if is_enable(app.config, "RDBMS_ENABLE"):
         rdb = SQLAlchemy()
         rdb.init_app(app)
@@ -106,6 +108,8 @@ def create_app(
             broker=app.config["CELERY_BROKER_URL"],
             backend=app.config["CELERY_BACKEND_URL"]
         )
+        logging.getLogger('amqp').setLevel(log_level)
+        logging.getLogger('celery').setLevel(log_level)
     if is_enable(app.config, "REDIS_ENABLE"):
         redis_db = FlaskRedis()
         redis_db.init_app(app)

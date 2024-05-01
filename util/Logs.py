@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import os
 import datetime
 import daiquiri
@@ -34,10 +35,11 @@ nameToLevel = {
 class LogHandler(object):
     console_log: daiquiri.KeywordArgumentAdapter
 
-    def __init__(self, logger_name: str,
-                 fmt: Optional[str] = "%(asctime)s [PID %(process)d] [%(levelname)s] %(name)s -> %(message)s",
-                 datefmt: Optional[str] = None, logger_type: LoggerType = None, log_level: int = logging.DEBUG,
-                 datadog_config: Optional[DataDog] = None, syslog_config: Optional[SysLog] = None):
+    def __init__(
+            self, logger_name: str,
+            fmt: Optional[str] = "%(asctime)s [PID %(process)d] [%(levelname)s] %(name)s -> %(message)s",
+            datefmt: Optional[str] = None, logger_type: LoggerType = None, log_level: int = logging.DEBUG,
+            datadog_config: Optional[DataDog] = None, syslog_config: Optional[SysLog] = None):
         formatter: daiquiri.formatter.ColorFormatter = daiquiri.formatter.ColorFormatter(
             fmt=fmt,
             datefmt=datefmt
