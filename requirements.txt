@@ -1,5 +1,5 @@
 tornado
-pyyaml
+rtoml
 redis[hiredis]
 flask
 click

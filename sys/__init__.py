@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import yaml
+import rtoml as tomllib
 import time
 import codecs
 import logging
@@ -49,15 +49,15 @@ def create_app(
     config_path: str = os.path.join(root_path, config_clz.replace(".", "/"))
     clazz = __import__(config_clz, globals(), fromlist=["config"])
     config: dict = getattr(clazz, "config")
-    yaml_file: str = os.path.join(config_path, "config.yaml")
-    if not os.path.isfile(yaml_file):
-        console.error(u"config.yaml not found!")
+    toml_file: str = os.path.join(config_path, "config.toml")
+    if not os.path.isfile(toml_file):
+        console.error(u"config.toml not found!")
         sys.exit(0)
-    config_yaml: dict = yaml.load(codecs.open(yaml_file, "r", "utf-8"), Loader=yaml.FullLoader)
-    if not in_dict(config_yaml, "config"):
-        console.error(u"config.yaml format error!")
+    config_toml: dict = tomllib.load(codecs.open(toml_file, "r", "utf-8").read())
+    if not in_dict(config_toml, "config"):
+        console.error(u"config.toml format error!")
         sys.exit(0)
-    base_config: dict = config_yaml["config"]
+    base_config: dict = config_toml["config"]
     static_folder: str = "{root_path}/web/static" if not in_dict(base_config, "static_folder") \
         else base_config["static_folder"]
     static_folder = static_folder.replace("{root_path}", root_path)
@@ -120,7 +120,7 @@ def create_app(
         CORS(app, resources=app.config["CORS_URI"])
     if is_enable(app.config, "CACHED_ENABLE"):
         cache = Cache(app)
-    blueprints_config: List[dict] = config_yaml["blueprint"] if in_dict(config_yaml, "blueprint") else []
+    blueprints_config: List[dict] = config_toml["blueprint"] if in_dict(config_toml, "blueprint") else []
     for blueprint in blueprints_config:
         key: str = list(blueprint.keys())[0]
         clazz = __import__(blueprint[key]["class"], globals(), fromlist=[key])
@@ -130,13 +130,15 @@ def create_app(
         else:
             app.register_blueprint(bp)
     wss: List[tuple] = []
-    websocket_config: List[dict] = config_yaml["websocket"] if in_dict(config_yaml, "websocket") else []
+    # ! 这里适配tornado的websocket，如果使用flask的websock，则不需要定义
+    # ! 如果使用uwsgi，则需要使用对应的引擎，用错引擎会直接报错
+    websocket_config: List[dict] = config_toml["websocket"] if in_dict(config_toml, "websocket") else []
     for websocket in websocket_config:
         key: str = list(websocket.keys())[0]
         clazz = __import__(websocket[key]["class"], globals(), fromlist=[key])
         ws = getattr(clazz, key)
         if not in_dict(websocket[key], "path"):
-            console.error("Path must be set in config.yaml.")
+            console.error("Path must be set in config.toml.")
             sys.exit(0)
         wss.append((websocket[key]["path"], ws))
     return app, wss, console
