@@ -2,19 +2,22 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+import codecs
 import asyncio
-
-root_path: str = os.path.abspath(os.path.dirname(__file__) + "/../")
-sys.path.append(root_path)
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, FallbackHandler
 from typing import Optional, Union
-from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, get_logger_level, get_buffer_size, \
-    get_event_loop, os_name
+
+root_path: str = os.path.abspath(os.path.dirname(__file__) + "/../")
+sys.path.insert(0, root_path)
+from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, \
+    get_logger_level, get_buffer_size, get_event_loop, os_name
 from mio.sys.wsgi import WSGIContainerWithThread
 from mio.util.Helper import write_txt_file, is_number, str2int
 from config import MIO_HOST, MIO_PORT
 
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 MIO_CONFIG: str = os.environ.get("MIO_CONFIG") or "default"
 MIO_APP_CONFIG: str = os.environ.get("MIO_APP_CONFIG") or "config"
 MIO_LIMIT_CPU: int = get_cpu_limit()
@@ -65,14 +68,17 @@ if pid_file_path is not None:
     write_txt_file(pid_file_path, str(os.getpid()))
 log_level, log_type, is_debug = get_logger_level(MIO_CONFIG)
 max_buffer_size, max_body_size = get_buffer_size()
-app, wss, console_log = create_app(MIO_CONFIG, root_path, MIO_APP_CONFIG, log_level=log_level, logger_type=log_type)
+app, wss, console_log = create_app(
+    MIO_CONFIG, root_path, MIO_APP_CONFIG, log_level=log_level, logger_type=log_type)
 wss.append((r".*", FallbackHandler, dict(fallback=WSGIContainerWithThread(app))))
 mWSGI: Application = Application(wss, debug=is_debug, autoreload=False)
 from mio.sys import socketio
 
 
 def create_server():
-    server = HTTPServer(mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size, xheaders=True)
+    server = HTTPServer(
+        mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size,
+        xheaders=True)
     if domain_socket is not None:
         from tornado.netutil import bind_unix_socket
 
@@ -100,7 +106,8 @@ async def main():
 if __name__ == "__main__":
     try:
         if socketio:
-            socketio.run(app, host=MIO_HOST, port=MIO_PORT)
+            socketio.run(
+                app, host=MIO_HOST, port=MIO_PORT, log_output=True, use_reloader=False)
         else:
             if MIO_LIMIT_CPU == 1:
                 asyncio.run(main())

@@ -7,8 +7,7 @@ from tornado.httputil import ResponseStartLine, HTTPHeaders, HTTPServerRequest
 from .tornado.wsgi import WSGIContainer
 from typing import List, Tuple, Optional, Callable, Any, Type, Dict, Union
 from types import TracebackType
-
-MIO_SYSTEM_VERSION = "1.8.1"
+from . import MIO_SYSTEM_VERSION
 
 
 class WSGIContainerWithThread(WSGIContainer):

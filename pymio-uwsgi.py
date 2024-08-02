@@ -1,11 +1,14 @@
 # -*- coding: UTF-8 -*-
 import os
 import sys
+import codecs
 
 root_path: str = os.path.abspath(os.path.dirname(__file__) + "/../")
 sys.path.append(root_path)
 from mio.sys import create_app, init_timezone, get_logger_level
 
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 MIO_CONFIG: str = os.environ.get("MIO_CONFIG") or "default"
 MIO_APP_CONFIG: str = os.environ.get("MIO_APP_CONFIG") or "config"
 init_timezone()

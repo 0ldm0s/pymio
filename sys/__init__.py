@@ -21,9 +21,9 @@ from typing import Tuple, Optional, List, Union
 from mio.util.Helper import in_dict, is_enable, is_number, get_canonical_os_name
 from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
-from mio.sys.wsgi import MIO_SYSTEM_VERSION
 from mio.sys.flask_mongoengine import MongoEngine
 
+MIO_SYSTEM_VERSION = "1.8.3"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
@@ -53,19 +53,22 @@ def create_app(
     if not os.path.isfile(toml_file):
         console.error(u"config.toml not found!")
         sys.exit(0)
-    config_toml: dict = tomllib.load(codecs.open(toml_file, "r", "utf-8").read())
+    config_toml: dict = tomllib.load(
+        codecs.open(toml_file, "r", "utf-8").read())
     if not in_dict(config_toml, "config"):
         console.error(u"config.toml format error!")
         sys.exit(0)
     base_config: dict = config_toml["config"]
-    static_folder: str = "{root_path}/web/static" if not in_dict(base_config, "static_folder") \
+    static_folder: str = "{root_path}/web/static" \
+        if not in_dict(base_config, "static_folder") \
         else base_config["static_folder"]
     static_folder = static_folder.replace("{root_path}", root_path)
     static_folder = os.path.abspath(static_folder)
     if not os.path.isdir(static_folder):
         console.error(u"Static file path not found!")
         sys.exit(0)
-    template_folder: str = "{root_path}/web/template" if not in_dict(base_config, "template_folder") \
+    template_folder: str = "{root_path}/web/template"\
+        if not in_dict(base_config, "template_folder") \
         else base_config["template_folder"]
     template_folder = template_folder.replace("{root_path}", root_path)
     template_folder = os.path.abspath(template_folder)
@@ -77,7 +80,8 @@ def create_app(
     if not in_dict(config, config_name):
         console.error(u"Config invalid!")
         sys.exit(0)
-    app: Flask = Flask(__name__, static_folder=static_folder, template_folder=template_folder)
+    app: Flask = Flask(
+        __name__, static_folder=static_folder, template_folder=template_folder)
     app.json_provider_class = MioJsonProvider
     app.json = MioJsonProvider(app)
     app.config.from_object(config[config_name])
@@ -120,7 +124,8 @@ def create_app(
         CORS(app, resources=app.config["CORS_URI"])
     if is_enable(app.config, "CACHED_ENABLE"):
         cache = Cache(app)
-    blueprints_config: List[dict] = config_toml["blueprint"] if in_dict(config_toml, "blueprint") else []
+    blueprints_config: List[dict] = config_toml["blueprint"] if in_dict(
+        config_toml, "blueprint") else []
     for blueprint in blueprints_config:
         key: str = list(blueprint.keys())[0]
         clazz = __import__(blueprint[key]["class"], globals(), fromlist=[key])
@@ -132,7 +137,8 @@ def create_app(
     wss: List[tuple] = []
     # ! 这里适配tornado的websocket，如果使用flask的websock，则不需要定义
     # ! 如果使用uwsgi，则需要使用对应的引擎，用错引擎会直接报错
-    websocket_config: List[dict] = config_toml["websocket"] if in_dict(config_toml, "websocket") else []
+    websocket_config: List[dict] = config_toml["websocket"] \
+        if in_dict(config_toml, "websocket") else []
     for websocket in websocket_config:
         key: str = list(websocket.keys())[0]
         clazz = __import__(websocket[key]["class"], globals(), fromlist=[key])
@@ -210,5 +216,6 @@ def get_cpu_limit() -> int:
     if os_name in ["windows", "unknown"]:
         # for windows os, just 1. test in win11
         return 1
-    cpu_limit: int = 1 if not is_number(os.environ.get("MIO_LIMIT_CPU")) else int(os.environ.get("MIO_LIMIT_CPU"))
+    cpu_limit: int = 1 if not is_number(os.environ.get("MIO_LIMIT_CPU")) \
+        else int(os.environ.get("MIO_LIMIT_CPU"))
     return cpu_limit
