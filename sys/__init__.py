@@ -23,7 +23,7 @@ from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
 from mio.sys.flask_mongoengine import MongoEngine
 
-MIO_SYSTEM_VERSION = "1.8.3"
+MIO_SYSTEM_VERSION = "1.8.4"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None

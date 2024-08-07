@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import codecs
 import asyncio
 from tornado.httpserver import HTTPServer
 from tornado.web import Application, FallbackHandler
@@ -16,8 +15,6 @@ from mio.sys.wsgi import WSGIContainerWithThread
 from mio.util.Helper import write_txt_file, is_number, str2int
 from config import MIO_HOST, MIO_PORT
 
-sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 MIO_CONFIG: str = os.environ.get("MIO_CONFIG") or "default"
 MIO_APP_CONFIG: str = os.environ.get("MIO_APP_CONFIG") or "config"
 MIO_LIMIT_CPU: int = get_cpu_limit()
