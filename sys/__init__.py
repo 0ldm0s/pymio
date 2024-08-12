@@ -18,12 +18,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 from tornado.ioloop import IOLoop
 from typing import Tuple, Optional, List, Union
-from mio.util.Helper import in_dict, is_enable, is_number, get_canonical_os_name
+from mio.util.Helper import in_dict, is_enable, is_number, get_canonical_os_name, get_args_from_dict
 from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
 from mio.sys.flask_mongoengine import MongoEngine
 
-MIO_SYSTEM_VERSION = "1.8.4"
+MIO_SYSTEM_VERSION = "1.8.6"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
@@ -39,7 +39,7 @@ os_name: str = get_canonical_os_name()
 
 def create_app(
         config_name: str, root_path: Optional[str] = None, config_clz: Optional[str] = None,
-        logger_type: LoggerType = LoggerType, log_level: int = logging.DEBUG
+        is_cli: bool = False, logger_type: LoggerType = LoggerType, log_level: int = logging.DEBUG
 ) -> Tuple[Flask, List[tuple], LogHandler]:
     global cache, babel, csrf, redis_db, db, rdb, mail, celery_app, socketio
     console = LogHandler("PyMio", logger_type=logger_type, log_level=log_level)
@@ -49,32 +49,35 @@ def create_app(
     config_path: str = os.path.join(root_path, config_clz.replace(".", "/"))
     clazz = __import__(config_clz, globals(), fromlist=["config"])
     config: dict = getattr(clazz, "config")
-    toml_file: str = os.path.join(config_path, "config.toml")
-    if not os.path.isfile(toml_file):
-        console.error(u"config.toml not found!")
-        sys.exit(0)
-    config_toml: dict = tomllib.load(
-        codecs.open(toml_file, "r", "utf-8").read())
-    if not in_dict(config_toml, "config"):
-        console.error(u"config.toml format error!")
-        sys.exit(0)
-    base_config: dict = config_toml["config"]
-    static_folder: str = "{root_path}/web/static" \
-        if not in_dict(base_config, "static_folder") \
-        else base_config["static_folder"]
-    static_folder = static_folder.replace("{root_path}", root_path)
-    static_folder = os.path.abspath(static_folder)
-    if not os.path.isdir(static_folder):
-        console.error(u"Static file path not found!")
-        sys.exit(0)
-    template_folder: str = "{root_path}/web/template"\
-        if not in_dict(base_config, "template_folder") \
-        else base_config["template_folder"]
-    template_folder = template_folder.replace("{root_path}", root_path)
-    template_folder = os.path.abspath(template_folder)
-    if not os.path.isdir(template_folder):
-        console.error(u"Template path not found!")
-        sys.exit(0)
+    config_toml: dict = {}
+    base_config: dict = {}
+    static_folder: Optional[str] = None
+    template_folder: Optional[str] = None
+    if not is_cli:
+        toml_file: str = os.path.join(config_path, "config.toml")
+        if not os.path.isfile(toml_file):
+            console.error(u"config.toml not found!")
+            sys.exit(0)
+        config_toml = tomllib.load(
+            codecs.open(toml_file, "r", "utf-8").read())
+        if not in_dict(config_toml, "config"):
+            console.error(u"config.toml format error!")
+            sys.exit(0)
+        base_config = config_toml["config"]
+        static_folder = get_args_from_dict(
+            base_config, "static_folder", default="{root_path}/web/static")
+        static_folder = static_folder.replace("{root_path}", root_path)
+        static_folder = os.path.abspath(static_folder)
+        if not os.path.isdir(static_folder):
+            console.error(u"Static file path not found!")
+            sys.exit(0)
+        template_folder = get_args_from_dict(
+            base_config, "template_folder", default="{root_path}/web/template")
+        template_folder = template_folder.replace("{root_path}", root_path)
+        template_folder = os.path.abspath(template_folder)
+        if not os.path.isdir(template_folder):
+            console.error(u"Template path not found!")
+            sys.exit(0)
     config_name: str = "default" if not isinstance(config_name, str) else config_name
     config_name = config_name.lower()
     if not in_dict(config, config_name):
@@ -124,8 +127,10 @@ def create_app(
         CORS(app, resources=app.config["CORS_URI"])
     if is_enable(app.config, "CACHED_ENABLE"):
         cache = Cache(app)
-    blueprints_config: List[dict] = config_toml["blueprint"] if in_dict(
-        config_toml, "blueprint") else []
+    if is_cli:
+        # 如果是cli模式，这里就出去就行了
+        return app, [], console
+    blueprints_config: List[dict] = get_args_from_dict(config_toml, "blueprint", default=[])
     for blueprint in blueprints_config:
         key: str = list(blueprint.keys())[0]
         clazz = __import__(blueprint[key]["class"], globals(), fromlist=[key])
@@ -134,11 +139,10 @@ def create_app(
             app.register_blueprint(bp, url_prefix=blueprint[key]["url_prefix"])
         else:
             app.register_blueprint(bp)
-    wss: List[tuple] = []
     # ! 这里适配tornado的websocket，如果使用flask的websock，则不需要定义
     # ! 如果使用uwsgi，则需要使用对应的引擎，用错引擎会直接报错
-    websocket_config: List[dict] = config_toml["websocket"] \
-        if in_dict(config_toml, "websocket") else []
+    wss: List[tuple] = []
+    websocket_config: List[dict] = get_args_from_dict(config_toml, "websocket", default=[])
     for websocket in websocket_config:
         key: str = list(websocket.keys())[0]
         clazz = __import__(websocket[key]["class"], globals(), fromlist=[key])
