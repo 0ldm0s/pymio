@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
 import os
 import re
 import sys
@@ -35,7 +35,7 @@ def get_canonical_os_name() -> str:
         return "windows"
     if sys.platform == "darwin":
         result = subprocess.run(["sysctl", "-a", "machdep.cpu.brand_string"], stdout=subprocess.PIPE)
-        brand_string: str = result.stdout.decode("utf-8").strip().lower()
+        brand_string: str = result.stdout.decode("UTF-8").strip().lower()
         if "apple" in brand_string:
             return "mac_m1"
         return "mac"
@@ -75,12 +75,49 @@ def in_dict(dic: dict, key: str) -> bool:
 
 
 def is_enable(dic: dict, key: str) -> bool:
+    """
+    主要用于判断权限字典内对应的键是否为布尔值。
+    要求字典内对应的元素的字典必须为布尔值，否则返回false
+    """
     if not in_dict(dic, key):
         return False
     _ = dic[key]
     if not isinstance(_, bool):
         return False
     return _
+
+
+def do_sum(*args) -> Decimal:
+    """
+    对传入的数字进行求和计算
+
+    :param args: 传入计算用的变量，支持str,float,int。非数字则跳过
+    """
+    calc_num: Decimal = Decimal("0")
+    for num in args:
+        if not is_number(num):
+            continue
+        calc_num += Decimal(str(num))
+    return calc_num
+
+
+def get_keyword(
+        keyword: str, default: Any, **kwargs: Dict[str, Any]
+) -> Tuple[Any, Dict[str, Any]]:
+    """
+    对传入的kwargs弹出指定keyword的数据。
+    请注意：pop之后的数据会从kwargs里移除
+
+    :param keyword: 从 kwargs 获取数据用的键
+    :param default: 当获取不到数据时返回的默认值
+    :param kwargs: 变量集
+    :return: 弹出的数据和 kwargs
+    """
+    try:
+        value = kwargs.pop(keyword)
+    except KeyError:
+        value = default
+    return value, kwargs
 
 
 def get_real_ip(
@@ -162,6 +199,9 @@ def str2timestamp(
 
 
 def get_bool(obj: Any) -> bool:
+    """
+    主要用于excel中，将代表true的字符转换为实际的布尔值
+    """
     obj = False if obj is None else obj
     if isinstance(obj, bool) is False:
         if is_number(obj):
@@ -178,6 +218,9 @@ def get_bool(obj: Any) -> bool:
 
 
 def get_root_path() -> str:
+    """
+    获取当前项目的根路径
+    """
     root_path = os.path.abspath(os.path.dirname(__file__) + "/../../")
     return root_path
 
@@ -205,7 +248,7 @@ def file_lock(filename: str, txt: str = " ", exp: int = None, reader: bool = Fal
     return 0, u"Locked." if not reader else read_txt_file(lock)
 
 
-def write_txt_file(filename: str, txt: str = " ", encoding: str = "utf-8") -> Tuple[bool, str]:
+def write_txt_file(filename: str, txt: str = " ", encoding: str = "UTF-8") -> Tuple[bool, str]:
     if os.path.isfile(filename):
         os.unlink(filename)
     try:
@@ -216,7 +259,7 @@ def write_txt_file(filename: str, txt: str = " ", encoding: str = "utf-8") -> Tu
         return False, str(e)
 
 
-def read_txt_file(filename: str, encoding: str = "utf-8") -> str:
+def read_txt_file(filename: str, encoding: str = "UTF-8") -> str:
     if not os.path.isfile(filename):
         return ""
     txt = ""
@@ -229,7 +272,7 @@ def read_txt_file(filename: str, encoding: str = "utf-8") -> str:
 
 
 def write_file(
-        filename: str, txt: Union[str, bytes] = " ", method: str = "w+", encoding: str = "utf-8"
+        filename: str, txt: Union[str, bytes] = " ", method: str = "w+", encoding: str = "UTF-8"
 ) -> Tuple[bool, str]:
     try:
         with open(filename, method, encoding=encoding) as locker:
@@ -239,7 +282,7 @@ def write_file(
         return False, str(e)
 
 
-def read_file(filename: str, method: str = "r", encoding: str = "utf-8") -> Optional[Union[str, bytes]]:
+def read_file(filename: str, method: str = "r", encoding: str = "UTF-8") -> Optional[Union[str, bytes]]:
     if not os.path.isfile(filename):
         return None
     with open(filename, method, encoding=encoding) as reader:
@@ -352,12 +395,12 @@ def safe_html_code(string_html: str = "", is_all: bool = True) -> str:
     if is_all:
         return string_html.replace("<", "&lt;").replace(">", "&gt;").replace("%3C", "&lt;").replace("%3E", "&gt;")
     string_html = string_html.replace("%3C", "&lt;").replace("%3E", "&gt;")
-    re_script_start = re.compile("<\s*script[^>]*>", re.IGNORECASE)
-    re_script_end = re.compile("<\s*/\s*script\s*>", re.IGNORECASE)
-    re_object_start = re.compile("<\s*object[^>]*>", re.IGNORECASE)
-    re_object_end = re.compile("<\s*/\s*object\s*>", re.IGNORECASE)
-    re_iframe_start = re.compile("<\s*iframe[^>]*>", re.IGNORECASE)
-    re_iframe_end = re.compile("<\s*/\s*iframe\s*>", re.IGNORECASE)
+    re_script_start = re.compile(r"<\s*script[^>]*>", re.IGNORECASE)
+    re_script_end = re.compile(r"<\s*/\s*script\s*>", re.IGNORECASE)
+    re_object_start = re.compile(r"<\s*object[^>]*>", re.IGNORECASE)
+    re_object_end = re.compile(r"<\s*/\s*object\s*>", re.IGNORECASE)
+    re_iframe_start = re.compile(r"<\s*iframe[^>]*>", re.IGNORECASE)
+    re_iframe_end = re.compile(r"<\s*/\s*iframe\s*>", re.IGNORECASE)
     string_html = re_script_start.sub("", string_html)  # 直接去掉
     string_html = re_script_end.sub("", string_html)
     string_html = re_object_start.sub("", string_html)
@@ -444,7 +487,7 @@ def get_variable_from_request(
 
 
 def get_local_now(hours: int = 0, minutes: int = 0) -> int:
-    utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+    utc_dt = datetime.now(timezone.utc).replace(tzinfo=timezone.utc)
     d = utc_dt.astimezone(timezone(timedelta(hours=hours, minutes=minutes)))
     dt = int(time.mktime(d.timetuple()))
     return dt
@@ -535,7 +578,7 @@ def get_now_microtime(max_ms_lan: int = 6, hours: int = 0, minutes: int = 0) -> 
 
 
 def microtime(get_as_float=False, max_ms_lan: int = 6, hours: int = 0, minutes: int = 0) -> str:
-    utc_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+    utc_dt = datetime.now(timezone.utc).replace(tzinfo=timezone.utc)
     d = utc_dt.astimezone(timezone(timedelta(hours=hours, minutes=minutes)))
     t = time.mktime(d.timetuple())
     ms: float = d.microsecond / 1000000.
@@ -557,7 +600,7 @@ def microtime(get_as_float=False, max_ms_lan: int = 6, hours: int = 0, minutes: 
 
 def md5(txt: str) -> str:
     md = hashlib.md5()
-    md.update(txt.encode("utf-8"))
+    md.update(txt.encode("UTF-8"))
     return md.hexdigest()
 
 
@@ -565,7 +608,7 @@ def base64_encode(message: bytes, is_bytes: bool = True) -> Union[bytes, str]:
     crypto: bytes = base64.b64encode(message)
     if is_bytes:
         return crypto
-    return crypto.decode("utf-8")
+    return crypto.decode("UTF-8")
 
 
 def base64_decode(crypto: str, is_bytes: bool = True) -> Union[bytes, str]:
@@ -575,11 +618,11 @@ def base64_decode(crypto: str, is_bytes: bool = True) -> Union[bytes, str]:
     message: bytes = base64.b64decode(crypto)
     if is_bytes:
         return message
-    return message.decode("utf-8")
+    return message.decode("UTF-8")
 
 
 def base64_txt_encode(message: str) -> str:
-    return str(base64_encode(message.encode("utf-8"), is_bytes=False))
+    return str(base64_encode(message.encode("UTF-8"), is_bytes=False))
 
 
 def base64_txt_decode(crypto: str) -> str:
@@ -683,7 +726,7 @@ def easy_encrypted(
 
 def check_chinese_mobile(mobile: str) -> bool:
     try:
-        return re.match("^1\d{10}$", mobile) is not None
+        return re.match(r"^1\d{10}$", mobile) is not None
     except Exception as e:
         str(e)
     return False
@@ -703,7 +746,7 @@ def eat_html(html: str) -> str:
 
 def force_bytes(value: Union[str, bytes]) -> bytes:
     if isinstance(value, str):
-        return value.encode("utf-8")
+        return value.encode("UTF-8")
     elif isinstance(value, bytes):
         return value
     else:

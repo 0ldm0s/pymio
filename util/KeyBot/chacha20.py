@@ -1,36 +1,86 @@
 # -*- coding: UTF-8 -*-
+import os
+import struct
 import base64
 import inspect
-import binascii
-from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from typing import Optional
-from mio.util.Helper import random_char
-from mio.util.Logs import LogHandler
-from . import Core
+from mio.util.Helper import random_char, base64_decode, base64_encode
+from .base import BaseModel
 
 
-class ChaCha20(object):
-    key: bytes
-    iv: bytes
+class ChaCha20(BaseModel):
+    _is_poly1305: bool = True
+    _counter: int = 0
 
-    def __get_logger__(self, name: str) -> LogHandler:
-        name = f"{self.__class__.__name__}.{name}"
-        return LogHandler(name)
-
-    def __init__(self, key: Optional[str] = None, iv: Optional[str] = None):
-        if key is None or len(key) != 32:
-            self.key = random_char(32).encode("utf-8")
-        else:
-            self.key = key.encode("utf-8")
-        if iv is None or len(iv) != 16:
-            self.iv = random_char(16).encode("utf-8")
-        else:
-            self.iv = iv.encode("utf-8")
+    def __init__(
+            self, key: Optional[str] = None, iv: Optional[str] = None, aad: Optional[str] = None,
+            is_hex: bool = False, **kwargs):
+        """
+        初始化加密函数
+        :param key: 加密密钥，两种方式传入，hex或base64，不填则自动生成
+        :param iv: nonce，两种方式传入，hex或base64，不填则自动生成
+        """
+        super().__init__(self.__class__.__name__)
+        console_log = self.__get_logger__(inspect.stack()[0].function)
+        aad_len: int = 16
+        if "is_poly1305" in kwargs:
+            self._is_poly1305 = kwargs.get("is_poly1305")
+        if "counter" in kwargs:
+            self._counter = kwargs.get("counter")
+        if "aad_len" in kwargs:
+            aad_len = kwargs.get("aad_len")
+        if key:
+            try:
+                if is_hex:
+                    self._key = bytes.fromhex(key)
+                else:
+                    self._key = base64_decode(key)
+            except Exception as e:
+                console_log.error(e)
+        if self._key is None:
+            self._key = ChaCha20Poly1305.generate_key()
+        if iv:
+            try:
+                if is_hex:
+                    self._iv = bytes.fromhex(iv)
+                else:
+                    self._iv = base64_decode(iv)
+            except Exception as e:
+                console_log.error(e)
+        if self._iv is None:
+            if self._is_poly1305:
+                self._iv = os.urandom(12)
+            else:
+                self._iv = os.urandom(8)
+        if aad:
+            if aad.lower().strip() == "none":
+                self._aad = os.urandom(aad_len)
+            else:
+                try:
+                    if is_hex:
+                        self._aad = bytes.fromhex(aad)
+                    else:
+                        self._aad = base64_decode(aad)
+                except Exception as e:
+                    console_log.error(e)
+                    raise e
 
     def encrypt(self, msg: bytes) -> Optional[bytes]:
         console_log = self.__get_logger__(inspect.stack()[0].function)
         try:
-            cipher: bytes = Core.go_encrypt(msg, algorithms.ChaCha20(self.key, self.iv), None)
+            cipher: bytes
+            if self._is_poly1305:
+                chacha = ChaCha20Poly1305(self._key)
+                cipher = chacha.encrypt(self._iv, msg, self._aad)
+            else:
+                full_nonce = struct.pack("<Q", self._counter) + self._iv
+                chacha = algorithms.ChaCha20(self._key, full_nonce)
+                _cipher = Cipher(chacha, mode=None)
+                encryptor = _cipher.encryptor()
+                cipher = encryptor.update(msg)
             return cipher
         except Exception as e:
             console_log.error(e)
@@ -39,29 +89,54 @@ class ChaCha20(object):
     def decrypt(self, cipher: bytes) -> Optional[bytes]:
         console_log = self.__get_logger__(inspect.stack()[0].function)
         try:
-            plain: bytes = Core.go_decrypt(cipher, algorithms.ChaCha20(self.key, self.iv), None)
+            plain: bytes
+            if self._is_poly1305:
+                chacha = ChaCha20Poly1305(self._key)
+                plain = chacha.decrypt(self._iv, cipher, self._aad)
+            else:
+                full_nonce = struct.pack("<Q", self._counter) + self._iv
+                chacha = algorithms.ChaCha20(self._key, full_nonce)
+                _cipher = Cipher(chacha, mode=None)
+                decryptor = _cipher.decryptor()
+                plain = decryptor.update(cipher)
             return plain
+        except InvalidTag:
+            console_log.error("authentication tag doesn’t validate")
         except Exception as e:
             console_log.error(e)
-            return None
+        return None
 
     def b64_encrypt(self, msg: str) -> Optional[str]:
-        b64_msg: bytes = base64.b64encode(msg.encode("utf-8"))
+        b64_msg: bytes = base64.b64encode(msg.encode("UTF-8"))
         cipher: Optional[bytes] = self.encrypt(b64_msg)
         if cipher is None:
             return None
-        return str(binascii.b2a_hex(cipher), encoding="utf-8")
+        return base64_encode(cipher, is_bytes=False)
 
     def b64_decrypt(self, cipher: str) -> Optional[str]:
-        b64_cipher: bytes = binascii.a2b_hex(cipher)
-        plain: Optional[bytes] = self.b64_decrypt(b64_cipher)
+        b64_cipher: bytes = base64_decode(cipher)
+        plain: Optional[bytes] = self.decrypt(b64_cipher)
         if plain is None:
             return None
         b64_msg: bytes = base64.b64decode(plain)
-        return str(b64_msg, encoding="utf-8")
+        return str(b64_msg, encoding="UTF-8")
 
-    def get_key(self):
-        return str(self.key, encoding="utf-8")
+    def hex_encrypt(self, msg: str) -> Optional[str]:
+        hex_msg: bytes = base64.b64encode(msg.encode("UTF-8"))
+        cipher: Optional[bytes] = self.encrypt(hex_msg)
+        if cipher is None:
+            return None
+        return cipher.hex()
 
-    def get_iv(self):
-        return str(self.iv, encoding="utf-8")
+    def hex_decrypt(self, cipher: str) -> Optional[str]:
+        console_log = self.__get_logger__(inspect.stack()[0].function)
+        try:
+            hex_cipher: bytes = bytes.fromhex(cipher)
+        except Exception as e:
+            console_log.error(e)
+            return None
+        plain: Optional[bytes] = self.decrypt(hex_cipher)
+        if plain is None:
+            return None
+        hex_msg: bytes = base64.b64decode(plain)
+        return str(hex_msg, encoding="UTF-8")

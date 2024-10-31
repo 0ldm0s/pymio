@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
 import os
 import sys
 import rtoml as tomllib
@@ -23,7 +23,7 @@ from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
 from mio.sys.flask_mongoengine import MongoEngine
 
-MIO_SYSTEM_VERSION = "1.8.6"
+MIO_SYSTEM_VERSION = "1.9.2"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
