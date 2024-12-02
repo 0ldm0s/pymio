@@ -22,7 +22,7 @@ class ORJSONEncoder:
     @staticmethod
     def encode(obj):
         # decode back to str, as orjson returns bytes
-        return orjson.dumps(obj).decode("utf-8")
+        return orjson.dumps(obj).decode("UTF-8")
 
 
 class MioJsonProvider(JSONProvider):

@@ -481,8 +481,8 @@ if has_crypto:
         def prepare_key(self, key):
             if isinstance(key, (bytes, str)):
                 if isinstance(key, str):
-                    key = key.encode("utf-8")
-                str_key = key.decode("utf-8")
+                    key = key.encode("UTF-8")
+                str_key = key.decode("UTF-8")
 
                 if "-----BEGIN PUBLIC" in str_key:
                     key = load_pem_public_key(key)
@@ -501,13 +501,13 @@ if has_crypto:
             return key
 
         def sign(self, msg, key):
-            msg = bytes(msg, "utf-8") if type(msg) is not bytes else msg
+            msg = bytes(msg, "UTF-8") if type(msg) is not bytes else msg
             return key.sign(msg)
 
         def verify(self, msg, key, sig):
             try:
-                msg = bytes(msg, "utf-8") if type(msg) is not bytes else msg
-                sig = bytes(sig, "utf-8") if type(sig) is not bytes else sig
+                msg = bytes(msg, "UTF-8") if type(msg) is not bytes else msg
+                sig = bytes(sig, "UTF-8") if type(sig) is not bytes else sig
 
                 if isinstance(key, (Ed25519PrivateKey, Ed448PrivateKey)):
                     key = key.public_key()

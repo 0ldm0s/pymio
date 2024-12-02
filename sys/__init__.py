@@ -23,7 +23,7 @@ from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
 from mio.sys.flask_mongoengine import MongoEngine
 
-MIO_SYSTEM_VERSION = "1.9.2"
+MIO_SYSTEM_VERSION = "1.9.3"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
@@ -59,7 +59,7 @@ def create_app(
             console.error(u"config.toml not found!")
             sys.exit(0)
         config_toml = tomllib.load(
-            codecs.open(toml_file, "r", "utf-8").read())
+            codecs.open(toml_file, "r", "UTF-8").read())
         if not in_dict(config_toml, "config"):
             console.error(u"config.toml format error!")
             sys.exit(0)

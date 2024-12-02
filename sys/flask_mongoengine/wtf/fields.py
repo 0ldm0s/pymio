@@ -285,7 +285,7 @@ class BinaryField(wtf_fields.TextAreaField):
         :param valuelist: A list of strings to process.
         """
         if valuelist:
-            self.data = bytes(valuelist[0], "utf-8")
+            self.data = bytes(valuelist[0], "UTF-8")
 
 
 # noinspection PyUnresolvedReferences,PyAttributeOutsideInit

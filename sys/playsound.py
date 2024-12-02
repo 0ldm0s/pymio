@@ -59,7 +59,7 @@ def _playsoundWin(sound, block = True):
             windll.winmm.mciGetErrorStringW(errorCode, errorBuffer, bufLen - 1)  # use widestring version of the function
             exceptionMessage = ('\n    Error ' + str(errorCode) + ' for command:'
                                 '\n        ' + command +
-                                '\n    ' + errorBuffer.raw.decode('utf-8').rstrip('\0'))
+                                '\n    ' + errorBuffer.raw.decode('UTF-8').rstrip('\0'))
             logger.error(exceptionMessage)
             raise PlaysoundException(exceptionMessage)
         return buf.value
@@ -100,7 +100,7 @@ def _handlePathOSX(sound):
             from urllib import quote  # Try using the Python 2 import before giving up entirely...
 
         parts = sound.split('://', 1)
-        return parts[0] + '://' + quote(parts[1].encode('utf-8')).replace(' ', '%20')
+        return parts[0] + '://' + quote(parts[1].encode('UTF-8')).replace(' ', '%20')
 
 
 def _playsoundOSX(sound, block = True):

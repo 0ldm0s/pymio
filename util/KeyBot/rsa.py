@@ -52,7 +52,7 @@ class Rsa(object):
             self.__load_key__(0)
             if self.__pubkey__ is None:
                 return None
-        message: bytes = msg.encode("utf-8")
+        message: bytes = msg.encode("UTF-8")
         crypto: bytes = rsa.encrypt(message, self.__pubkey__)
         return crypto
 
@@ -61,7 +61,7 @@ class Rsa(object):
         if crypto is None:
             return None
         ec: bytes = base64.b64encode(crypto)
-        return str(ec, encoding="utf-8")
+        return str(ec, encoding="UTF-8")
 
     def decrypt(self, crypto: bytes) -> Optional[str]:
         if self.__privkey__ is None:
@@ -69,7 +69,7 @@ class Rsa(object):
             if self.__privkey__ is None:
                 return None
         message: bytes = rsa.decrypt(crypto, self.__privkey__)
-        msg: str = str(message, encoding="utf-8")
+        msg: str = str(message, encoding="UTF-8")
         return msg
 
     def base64_decrypt(self, crypto: str) -> Optional[str]:
@@ -83,7 +83,7 @@ class Rsa(object):
             if self.__pubkey__ is None:
                 return None
         kfc: bytes = base64.b64encode(self.__pubkey__.save_pkcs1())
-        return str(kfc, encoding="utf-8")
+        return str(kfc, encoding="UTF-8")
 
     def get_base64_privkey(self) -> Optional[str]:
         if self.__privkey__ is None:
@@ -91,7 +91,7 @@ class Rsa(object):
             if self.__privkey__ is None:
                 return None
         kfc: bytes = base64.b64encode(self.__privkey__.save_pkcs1())
-        return str(kfc, encoding="utf-8")
+        return str(kfc, encoding="UTF-8")
 
     def set_base64_pubkey(self, crypto: str):
         crypto_message: bytes = base64.b64decode(crypto)

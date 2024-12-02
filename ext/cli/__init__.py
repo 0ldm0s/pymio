@@ -1,4 +1,4 @@
-# -*- encoding: utf-8 -*-
+# -*- encoding: UTF-8 -*-
 import os
 import click
 from flask import current_app
