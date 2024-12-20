@@ -23,7 +23,7 @@ from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
 from mio.sys.flask_mongoengine import MongoEngine
 
-MIO_SYSTEM_VERSION = "1.9.3"
+MIO_SYSTEM_VERSION = "1.9.5"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
@@ -110,10 +110,23 @@ def create_app(
         rdb = SQLAlchemy()
         rdb.init_app(app)
     if is_enable(app.config, "CELERY_ENABLE"):
+        celery_app_config: dict = {
+            "broker": app.config["CELERY_BROKER_URL"],
+            "backend": app.config["CELERY_BACKEND_URL"],
+        }
+        if "CELERY_RESULT_BACKEND" in app.config:
+            celery_app_config.update({"result_backend": app.config["CELERY_RESULT_BACKEND"]})
+        if "CELERY_RESULT_PERSISTENT" in app.config:
+            celery_app_config.update({"result_persistent": app.config["CELERY_RESULT_PERSISTENT"]})
+        if "CELERY_RESULT_EXCHANGE" in app.config:
+            celery_app_config.update({"result_exchange": app.config["CELERY_RESULT_EXCHANGE"]})
+        if "CELERY_RESULT_EXCHANGE_TYPE" in app.config:
+            celery_app_config.update({"result_exchange_type": app.config["CELERY_RESULT_EXCHANGE_TYPE"]})
+        if "CELERY_BROKER_USE_SSL" in app.config:
+            celery_app_config.update({"broker_use_ssl": app.config["CELERY_BROKER_USE_SSL"]})
         celery_app = Celery(
             app.import_name,
-            broker=app.config["CELERY_BROKER_URL"],
-            backend=app.config["CELERY_BACKEND_URL"]
+            **celery_app_config
         )
         logging.getLogger('amqp').setLevel(log_level)
         logging.getLogger('celery').setLevel(log_level)
