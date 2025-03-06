@@ -1,11 +1,14 @@
 # -*- coding: UTF-8 -*-
 import os
+import re
 import sys
 import rtoml as tomllib
 import time
 import codecs
 import logging
 import asyncio
+import importlib
+from pathlib import Path
 from celery import Celery
 from flask import Flask, blueprints
 from flask_cors import CORS
@@ -23,7 +26,7 @@ from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
 from mio.sys.flask_mongoengine import MongoEngine
 
-MIO_SYSTEM_VERSION = "1.9.5"
+MIO_SYSTEM_VERSION = "1.9.9"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
@@ -46,9 +49,21 @@ def create_app(
     console.info(f"Initializing the system......profile: {config_name}")
     console.info(f"Pymio Version: {MIO_SYSTEM_VERSION}")
     config_clz: str = "config" if not isinstance(config_clz, str) else config_clz.strip()
-    config_path: str = os.path.join(root_path, config_clz.replace(".", "/"))
-    clazz = __import__(config_clz, globals(), fromlist=["config"])
-    config: dict = getattr(clazz, "config")
+    if not re.match(r"^config(\.[a-zA-Z0-9_]+)*$", config_clz):
+        raise ValueError("Invalid config module name (e.g., config.prod)")
+    raw_path: str = os.path.join(root_path, config_clz.replace(".", os.path.sep))
+    config_path = Path(os.path.abspath(raw_path))  # 关键！消除符号和多余斜杠
+    root_path_obj = Path(root_path).resolve()
+    # 检查绝对路径是否在根目录下
+    if not config_path.is_relative_to(root_path_obj):
+        raise ValueError(f"Config path {config_path} is outside project root")
+    try:
+        # 仅允许加载 config 子目录下的模块
+        module = importlib.import_module(f"{config_clz}", package="config")
+        config = getattr(module, "config")
+    except (ImportError, AttributeError) as e:
+        console.error(f"Config module {config_clz} not found: {e}")
+        sys.exit(1)
     config_toml: dict = {}
     base_config: dict = {}
     static_folder: Optional[str] = None
@@ -197,7 +212,9 @@ def init_uvloop():
             winloop.install()
             return
         import uvloop
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        if not isinstance(asyncio.get_event_loop_policy(), uvloop.EventLoopPolicy):
+            uvloop.install()  # 等效于 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+            print("uvloop event loop policy activated")
     except Exception as e:
         str(e)
         IOLoop.configure("tornado.platform.asyncio.AsyncIOLoop")

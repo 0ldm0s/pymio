@@ -109,8 +109,8 @@ class LogHandler(object):
     def info(self, msg):
         self.console_log.info(msg)
 
-    def error(self, msg):
-        self.console_log.error(msg)
+    def error(self, msg, exc_info: bool = False):
+        self.console_log.error(msg, exc_info=exc_info)
 
     def debug(self, msg):
         self.console_log.debug(msg)
