@@ -3,16 +3,15 @@
 import os
 import sys
 import asyncio
-from tornado.httpserver import HTTPServer
-from tornado.web import Application, FallbackHandler
+from flask import Flask
 from typing import Optional, Union
 
 root_path: str = os.path.abspath(os.path.dirname(__file__) + "/../")
 sys.path.insert(0, root_path)
 from mio.sys import create_app, init_timezone, init_uvloop, get_cpu_limit, \
-    get_logger_level, get_buffer_size, get_event_loop, os_name
-from mio.sys.wsgi import WSGIContainerWithThread
+    get_logger_level, get_buffer_size, os_name
 from mio.util.Helper import write_txt_file, is_number, str2int
+from mio.util.Logs import LogHandler
 from config import MIO_HOST, MIO_PORT
 
 MIO_CONFIG: str = os.environ.get("MIO_CONFIG") or "default"
@@ -65,54 +64,49 @@ if pid_file_path is not None:
     write_txt_file(pid_file_path, str(os.getpid()))
 log_level, log_type, is_debug = get_logger_level(MIO_CONFIG)
 max_buffer_size, max_body_size = get_buffer_size()
-app, wss, console_log = create_app(
+app: Flask
+console_log: LogHandler
+app, console_log = create_app(
     MIO_CONFIG, root_path, MIO_APP_CONFIG, log_level=log_level, logger_type=log_type)
-wss.append((r".*", FallbackHandler, dict(fallback=WSGIContainerWithThread(app))))
-mWSGI: Application = Application(wss, debug=is_debug, autoreload=False)
-from mio.sys import socketio
-
-
-def create_server():
-    server = HTTPServer(
-        mWSGI, max_buffer_size=max_buffer_size, max_body_size=max_body_size,
-        xheaders=True)
-    if domain_socket is not None:
-        from tornado.netutil import bind_unix_socket
-
-        socket = bind_unix_socket(domain_socket, mode=0o777)
-        server.add_socket(socket)
-        console_log.info(f"WebServer listen in {domain_socket}")
-    else:
-        server.bind(MIO_PORT, MIO_HOST)
-        console_log.info(f"WebServer listen in http://{MIO_HOST}:{MIO_PORT}")
-    if MIO_LIMIT_CPU <= 0:
-        import multiprocessing
-
-        workers = multiprocessing.cpu_count()
-        server.start(workers)
-    else:
-        server.start(MIO_LIMIT_CPU)
-    return server
-
-
-async def main():
-    create_server()
-    await asyncio.Event().wait()
-
 
 if __name__ == "__main__":
     try:
-        if socketio:
-            socketio.run(
-                app, host=MIO_HOST, port=MIO_PORT, log_output=True, use_reloader=False)
-        else:
-            if MIO_LIMIT_CPU == 1:
-                asyncio.run(main())
-            else:
-                create_server()
-                get_event_loop().run_forever()
+        try:
+            from hypercorn.asyncio import serve
+            from hypercorn.config import Config
+            from quart import Quart
+            from mio.sys.MountMiddleware import MountMiddleware
+
+            # 初始化Quart应用
+            quart_app = Quart(__name__)
+            quart_app.asgi_app = MountMiddleware(quart_app.asgi_app, app)
+            # 配置Hypercorn参数
+            config = Config()
+            config.bind = [f"unix:{domain_socket}"] if domain_socket else [f"{MIO_HOST}:{MIO_PORT}"]
+            if MIO_UVLOOP:
+                config.worker_class = "uvloop"
+            config.workers = MIO_LIMIT_CPU if MIO_LIMIT_CPU > 1 else 1
+            config.loglevel = "debug" if MIO_CONFIG != "production" else "warning"
+            config.accesslog = "-"
+            # config.access_log_format = '%h %r %s %b "%(Referer)i" "%(UserAgent)i"'
+            config.access_log_format = (
+                '%(h)s(%(X-Forwarded-For)s) %(r)s %(s)s %(b)s "%(f)s" "%(a)s"'  # 注意变量名规范
+            )
+            asyncio.run(serve(quart_app, config))
+        except Exception as e:
+            console_log.warning(f"无法启动Quart服务（{str(e)}），正在回退到纯Flask模式")
+            # 使用更安全的Flask内置服务器配置
+            app.run(
+                host=MIO_HOST,
+                port=int(MIO_PORT),
+                use_reloader=False,
+                use_debugger=False,
+                threaded=True,
+                passthrough_errors=True
+            )
     except KeyboardInterrupt:
-        if MIO_LIMIT_CPU != 1 and socketio is None:
-            get_event_loop().stop()
+        console_log.warning("WebServer Shutdowning...")
+    except Exception as e:
+        console_log.error(f"Server Error: {str(e)}")
     finally:
         console_log.info("WebServer Closed.")

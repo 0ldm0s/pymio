@@ -18,15 +18,13 @@ from flask_caching import Cache
 from flask_redis import FlaskRedis
 from flask_wtf.csrf import CSRFProtect
 from flask_sqlalchemy import SQLAlchemy
-from flask_socketio import SocketIO
-from tornado.ioloop import IOLoop
 from typing import Tuple, Optional, List, Union
 from mio.util.Helper import in_dict, is_enable, is_number, get_canonical_os_name, get_args_from_dict
 from mio.util.Logs import LogHandler, LoggerType, nameToLevel
 from mio.sys.json import MioJsonProvider
 from mio.sys.flask_mongoengine import MongoEngine
 
-MIO_SYSTEM_VERSION = "1.9.9"
+MIO_SYSTEM_VERSION = "2.0.0"
 mail = None
 crypt: Bcrypt = Bcrypt()
 db: Optional[MongoEngine] = None
@@ -36,15 +34,14 @@ csrf: Optional[CSRFProtect] = None
 cache: Optional[Cache] = None
 babel: Optional[Babel] = None
 celery_app: Optional[Celery] = None
-socketio: Optional[SocketIO] = None
 os_name: str = get_canonical_os_name()
 
 
 def create_app(
         config_name: str, root_path: Optional[str] = None, config_clz: Optional[str] = None,
         is_cli: bool = False, logger_type: LoggerType = LoggerType, log_level: int = logging.DEBUG
-) -> Tuple[Flask, List[tuple], LogHandler]:
-    global cache, babel, csrf, redis_db, db, rdb, mail, celery_app, socketio
+) -> Tuple[Flask, LogHandler]:
+    global cache, babel, csrf, redis_db, db, rdb, mail, celery_app
     console = LogHandler("PyMio", logger_type=logger_type, log_level=log_level)
     console.info(f"Initializing the system......profile: {config_name}")
     console.info(f"Pymio Version: {MIO_SYSTEM_VERSION}")
@@ -110,8 +107,6 @@ def create_app(
         if is_enable(base_config["csrf"], "enable"):
             csrf = CSRFProtect()
             csrf.init_app(app)
-    if is_enable(app.config, "MIO_SOCKETIO"):
-        socketio = SocketIO(app, cors_allowed_origins='*')
     if is_enable(app.config, "MIO_MAIL"):
         from flask_mail import Mail
         mail = Mail()
@@ -157,7 +152,7 @@ def create_app(
         cache = Cache(app)
     if is_cli:
         # 如果是cli模式，这里就出去就行了
-        return app, [], console
+        return app, console
     blueprints_config: List[dict] = get_args_from_dict(config_toml, "blueprint", default=[])
     for blueprint in blueprints_config:
         key: str = list(blueprint.keys())[0]
@@ -167,19 +162,8 @@ def create_app(
             app.register_blueprint(bp, url_prefix=blueprint[key]["url_prefix"])
         else:
             app.register_blueprint(bp)
-    # ! 这里适配tornado的websocket，如果使用flask的websock，则不需要定义
-    # ! 如果使用uwsgi，则需要使用对应的引擎，用错引擎会直接报错
-    wss: List[tuple] = []
-    websocket_config: List[dict] = get_args_from_dict(config_toml, "websocket", default=[])
-    for websocket in websocket_config:
-        key: str = list(websocket.keys())[0]
-        clazz = __import__(websocket[key]["class"], globals(), fromlist=[key])
-        ws = getattr(clazz, key)
-        if not in_dict(websocket[key], "path"):
-            console.error("Path must be set in config.toml.")
-            sys.exit(0)
-        wss.append((websocket[key]["path"], ws))
-    return app, wss, console
+    # 移除废弃的WebSocket配置逻辑
+    return app, console
 
 
 def get_timezone_config() -> str:
@@ -204,7 +188,6 @@ def init_timezone():
 def init_uvloop():
     try:
         if os_name == "unknown":
-            IOLoop.configure("tornado.platform.asyncio.AsyncIOLoop")
             return
         if os_name == "windows":
             import winloop
@@ -217,11 +200,6 @@ def init_uvloop():
             print("uvloop event loop policy activated")
     except Exception as e:
         str(e)
-        IOLoop.configure("tornado.platform.asyncio.AsyncIOLoop")
-
-
-def get_event_loop():
-    return asyncio.get_event_loop()
 
 
 def get_logger_level(config_name: str) -> Tuple[int, LoggerType, bool]:
